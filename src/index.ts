@@ -15,7 +15,7 @@ class Joystick {
   camera: PerspectiveCamera;
   environment: Object3D;
   joystickTouchZone = 75;
-  quaternion: Quaternion;
+  quaternion: Quaternion = new Quaternion();
   xAxis = new Vector3(1, 0, 0);
   yAxis = new Vector3(0, 1, 0);
   rotateFactor = 0.0005;
@@ -23,15 +23,15 @@ class Joystick {
    * Timestamp of when the user touched the screen.
    * This is used for de-bouncing the user interaction
    */
-  touchStart: number;
+  touchStart = 0;
   /**
    * Anchor of the joystick base
    */
-  baseAnchorPoint: Vector2;
+  baseAnchorPoint: Vector2 = new Vector2();
   /**
    * Current point of the joystick ball
    */
-  ballAnchorPoint: Vector2;
+  ballAnchorPoint: Vector2 = new Vector2();
   /**
    * Function that allows you to prevent the joystick
    * from attaching
@@ -51,7 +51,21 @@ class Joystick {
    */
   joystickIsActive = false;
 
-  constructor() {
+  constructor({
+    scene,
+    camera,
+    environment,
+    quaternion,
+  }: {
+    scene: Scene;
+    camera: PerspectiveCamera;
+    environment: Object3D;
+    quaternion: Quaternion;
+  }) {
+    this.scene = scene;
+    this.camera = camera;
+    this.environment = environment;
+    this.quaternion = quaternion;
     this.createTouchEventListeners();
   }
 
@@ -62,9 +76,11 @@ class Joystick {
    * @param debounceInMs
    * @returns {boolean}
    */
-  debounceTime = (debounceInMs) => ((Date.now() - this.touchStart) < debounceInMs);
+  private debounceTime = (debounceInMs: number) => (
+    (Date.now() - this.touchStart) < debounceInMs
+  );
 
-  renderHook = () => {
+  public renderHook = (): void => {
     this.createRotation();
   };
 
@@ -72,14 +88,19 @@ class Joystick {
    * TODO: Find out why we don't do iPhone
    * @param event
    */
-  isAndroid = (event: TouchEvent) => {
+  private isAndroid = (event: TouchEvent) => {
     if (navigator.userAgent.match(/Android/i)) {
       event.preventDefault();
     }
-  }
+  };
 
-  swipeDistanceIsMoreThan = (touch: TouchEvent) => {
-    const distance = touch.touches.item(0);
+  private swipeDistanceIsMoreThan = (touch: TouchEvent) => {
+    const distance = touch.touches?.item(0);
+
+    if (distance === null) {
+      return;
+    }
+
     const xDistance = Math.abs(this.baseAnchorPoint.x - distance.clientX);
     const yDistance = Math.abs(this.baseAnchorPoint.y - distance.clientY);
 
@@ -87,17 +108,22 @@ class Joystick {
       (xDistance > this.activateAfterPixelDistance) ||
       (yDistance > this.activateAfterPixelDistance)
     );
-  }
+  };
 
-  joystickIsInBounds = (touch: Touch): boolean => {
+  private joystickIsInBounds = (touch: Touch): boolean => {
     const x = Math.pow((touch.clientX - this.baseAnchorPoint.x), 2);
     const y = Math.pow((touch.clientY - this.baseAnchorPoint.y), 2);
     const d = Math.sqrt(x + y);
 
     return (d <= this.joystickTouchZone);
-  }
+  };
 
-  createCircle = (name: string, position: Vector3, color: number, size: number) => {
+  private createCircle = (
+    name: string,
+    position: Vector3,
+    color: number,
+    size: number,
+  ) => {
     const geometry = new CircleGeometry(size, 72);
     const material = new MeshLambertMaterial({
       color: color,
@@ -108,13 +134,17 @@ class Joystick {
     joyStickBaseCircle.name = name;
     joyStickBaseCircle.position.copy(position);
     this.scene.add(joyStickBaseCircle);
-  }
+  };
 
-  attachJoystick = (event: TouchEvent) => {
+  private attachJoystick = (event: TouchEvent) => {
     const joyStickBase = this.scene.getObjectByName('joystick-base');
     const joyStickBall = this.scene.getObjectByName('joystick-ball');
     const zoomScale = 1 / this.camera.zoom;
     const touch = event.touches.item(0);
+
+    if (touch === null) {
+      return;
+    }
 
     // TODO: Set min, max and hotzone once to this
     const touchX = (touch.clientX / window.innerWidth) * 2 - 1;
@@ -140,9 +170,9 @@ class Joystick {
     this.createCircle('joystick-base', position, 0x666666, 0.9 * zoomScale);
     this.createCircle('joystick-ball', position, 0x444444, 0.5 * zoomScale);
     this.joystickIsActive = true;
-  }
+  };
 
-  removeJoystick = () => {
+  private removeJoystick = () => {
     const joystickBase = this.scene.getObjectByName('joystick-base');
     const joyStickBall = this.scene.getObjectByName('joystick-ball');
 
@@ -152,14 +182,14 @@ class Joystick {
     }
 
     this.joystickIsActive = false;
-  }
+  };
 
   /**
    * Rotates the environment
    * @param axis
    * @param angle
    */
-  rotate = (axis, angle) => {
+  private rotate = (axis: Vector3, angle: number) => {
     this.quaternion.setFromAxisAngle(axis, angle);
     this.environment.quaternion.premultiply(this.quaternion);
   };
@@ -167,7 +197,7 @@ class Joystick {
   /**
    * createRotation function used to calculate the amount of rotation
    */
-  createRotation = (): void => {
+  private createRotation = (): void => {
     if (!this.isActive) {
       return;
     }
@@ -180,15 +210,15 @@ class Joystick {
 
     this.rotate(this.yAxis, moveX * this.rotateFactor);
     this.rotate(this.xAxis, moveY * this.rotateFactor);
-  }
+  };
 
-  destroyTouchEventListeners = () => {
+  destroyTouchEventListeners = (): void => {
     /**
      * TODO: Remove event listeners from the document
      */
   };
 
-  createTouchEventListeners = () => {
+  private createTouchEventListeners = () => {
     document.addEventListener('touchstart', (event: TouchEvent) => {
       this.isAndroid(event);
 
@@ -197,6 +227,11 @@ class Joystick {
       }
 
       const touch = event.touches.item(0);
+
+      if (touch === null) {
+        return;
+      }
+
       this.baseAnchorPoint = new Vector2(touch.clientX, touch.clientY);
       this.touchStart = Date.now();
     });
@@ -223,7 +258,7 @@ class Joystick {
       this.attachJoystick(event);
     });
 
-    document.addEventListener('touchend', (event: TouchEvent) => {
+    document.addEventListener('touchend', () => {
       if (this.debounceTime(150) || !this.joystickIsActive) {
         return;
       }
@@ -236,7 +271,7 @@ class Joystick {
         this.isActive = false;
       }, 150);
     });
-  }
+  };
 }
 
 export default Joystick;
