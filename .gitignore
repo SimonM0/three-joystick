@@ -1,0 +1,14 @@
+# ide
+/.idea
+
+# dependencies
+node_modules
+
+# testing
+coverage
+
+# production
+build
+
+# logs
+*.log
