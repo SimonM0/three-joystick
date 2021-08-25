@@ -10,6 +10,10 @@ import {
   Object3D,
 } from 'three';
 
+const degreesToRadians = (degrees: number): number => {
+  return degrees * (Math.PI / 180);
+};
+
 class JoystickControls {
   scene: Scene;
   camera: PerspectiveCamera;
@@ -154,7 +158,7 @@ class JoystickControls {
 
     if (joyStickBase && joyStickBall) {
       if (!this.joystickIsInBounds(touch)) {
-        const angle = Math.atan2(touch.clientY - this.baseAnchorPoint.y, touch.clientX - this.baseAnchorPoint.x) - 1.57059633;
+        const angle = Math.atan2(touch.clientY - this.baseAnchorPoint.y, touch.clientX - this.baseAnchorPoint.x) - degreesToRadians(90);
         const xDistance = Math.sin(angle) * this.joystickTouchZone;
         const yDistance = Math.cos(angle) * this.joystickTouchZone;
         direction = new Vector3(-xDistance, -yDistance, 0).normalize();
