@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest",
     "lint": "eslint ./src --ext .ts --fix",
-    "dev": "webpack --config webpack.dev.ts",
+    "dev": "webpack serve --config webpack.dev.ts",
     "build": "webpack --config webpack.prod.ts"
   },
   "repository": {
@@ -30,12 +30,17 @@
     "@babel/plugin-transform-runtime": "^7.12.10",
     "@babel/preset-env": "^7.12.11",
     "@babel/preset-typescript": "^7.12.7",
+    "@babel/register": "^7.15.3",
     "@babel/runtime": "^7.12.5",
     "@types/jest": "^27.0.1",
+    "@types/mini-css-extract-plugin": "^2.2.0",
     "@types/three": "^0.131.0",
+    "@types/webpack-dev-server": "^4.0.0",
     "@typescript-eslint/eslint-plugin": "^4.29.3",
     "@typescript-eslint/parser": "^4.11.1",
+    "babel-loader": "^8.2.2",
     "clean-webpack-plugin": "^4.0.0-alpha.0",
+    "css-loader": "^6.2.0",
     "eslint": "^7.17.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^3.4.1",
@@ -45,14 +50,21 @@
     "jest": "^27.0.6",
     "mini-css-extract-plugin": "^2.2.0",
     "prettier-eslint": "^13.0.0",
+    "sass": "^1.38.1",
+    "sass-loader": "^12.1.0",
+    "three-trackballcontrols": "^0.9.0",
     "ts-jest": "^27.0.5",
     "ts-node": "^10.2.0",
     "typescript": "^4.3.5",
     "webpack": "^5.51.1",
     "webpack-cli": "^4.8.0",
+    "webpack-dev-server": "^4.0.0",
     "webpack-merge": "^5.8.0"
   },
   "peerDependencies": {
     "three": "^0.131.3"
+  },
+  "dependencies": {
+    "bootstrap": "^5.1.0"
   }
 }

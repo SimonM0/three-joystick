@@ -10,11 +10,11 @@ import {
   Object3D,
 } from 'three';
 
-class Joystick {
+class JoystickControls {
   scene: Scene;
   camera: PerspectiveCamera;
-  environment: Object3D;
   joystickTouchZone = 75;
+  environment: Object3D = new Object3D();
   quaternion: Quaternion = new Quaternion();
   xAxis = new Vector3(1, 0, 0);
   yAxis = new Vector3(0, 1, 0);
@@ -50,22 +50,21 @@ class Joystick {
    * Creation of joystick complete
    */
   joystickIsActive = false;
+  /**
+   * Use mesh for now
+   *
+   * TODO: Make this outside the joystick
+   */
+  target: Object3D;
 
-  constructor({
-    scene,
-    camera,
-    environment,
-    quaternion,
-  }: {
-    scene: Scene;
-    camera: PerspectiveCamera;
-    environment: Object3D;
-    quaternion: Quaternion;
-  }) {
-    this.scene = scene;
+  constructor(
+    camera: PerspectiveCamera,
+    scene: Scene,
+    target: Object3D,
+  ) {
     this.camera = camera;
-    this.environment = environment;
-    this.quaternion = quaternion;
+    this.scene = scene;
+    this.target = target;
     this.createTouchEventListeners();
   }
 
@@ -80,13 +79,12 @@ class Joystick {
     (Date.now() - this.touchStart) < debounceInMs
   );
 
-  public renderHook = (): void => {
+  public update = (): void => {
     this.createRotation();
   };
 
   /**
    * TODO: Find out why we don't do iPhone
-   * @param event
    */
   private isAndroid = (event: TouchEvent) => {
     if (navigator.userAgent.match(/Android/i)) {
@@ -191,7 +189,7 @@ class Joystick {
    */
   private rotate = (axis: Vector3, angle: number) => {
     this.quaternion.setFromAxisAngle(axis, angle);
-    this.environment.quaternion.premultiply(this.quaternion);
+    this.target?.quaternion.premultiply(this.quaternion);
   };
 
   /**
@@ -220,8 +218,6 @@ class Joystick {
 
   private createTouchEventListeners = () => {
     document.addEventListener('touchstart', (event: TouchEvent) => {
-      this.isAndroid(event);
-
       if (this.preventAction()) {
         return;
       }
@@ -241,7 +237,7 @@ class Joystick {
         // Return because we tapped instead
         return;
       }
-      this.isAndroid(event);
+
       this.isActive = true;
 
       if (this.preventAction()) {
@@ -274,4 +270,4 @@ class Joystick {
   };
 }
 
-export default Joystick;
+export default JoystickControls;
