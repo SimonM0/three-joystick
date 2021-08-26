@@ -10,6 +10,7 @@ import {
   Object3D,
 } from 'three';
 import isTouchOutOfBounds from './helpers/isTouchOutOfBounds';
+import debounceTime from './helpers/debounceTime';
 
 const degreesToRadians = (degrees: number): number => {
   return degrees * (Math.PI / 180);
@@ -21,8 +22,6 @@ class JoystickControls {
   joystickTouchZone = 75;
   environment: Object3D = new Object3D();
   quaternion: Quaternion = new Quaternion();
-  xAxis = new Vector3(1, 0, 0);
-  yAxis = new Vector3(0, 1, 0);
   rotateFactor = 0.0005;
   /**
    * Timestamp of when the user touched the screen.
@@ -36,7 +35,7 @@ class JoystickControls {
   /**
    * Current point of the joystick ball
    */
-  ballAnchorPoint: Vector2 = new Vector2();
+  touchPoint: Vector2 = new Vector2();
   /**
    * Function that allows you to prevent the joystick
    * from attaching
@@ -52,9 +51,9 @@ class JoystickControls {
    */
   isActive = false;
   /**
-   * Creation of joystick complete
+   * True wehn the joystick has been attached to the scene
    */
-  joystickIsActive = false;
+  isJoystickAttached = false;
   /**
    * Use mesh for now
    *
@@ -72,21 +71,6 @@ class JoystickControls {
     this.target = target;
     this.createTouchEventListeners();
   }
-
-  /**
-   * This is used to determine whether a user has tapped/clicked or
-   * swiped/dragged
-   *
-   * @param debounceInMs
-   * @returns {boolean}
-   */
-  private debounceTime = (debounceInMs: number) => (
-    (Date.now() - this.touchStart) < debounceInMs
-  );
-
-  public update = (): void => {
-    this.createRotation();
-  };
 
   /**
    * TODO: Find out why we don't do iPhone
@@ -171,7 +155,7 @@ class JoystickControls {
     //** Joystick Base Position
     this.createCircle('joystick-base', position, 0x666666, 0.9 * zoomScale);
     this.createCircle('joystick-ball', position, 0x444444, 0.5 * zoomScale);
-    this.joystickIsActive = true;
+    this.isJoystickAttached = true;
   };
 
   private removeJoystick = () => {
@@ -183,7 +167,7 @@ class JoystickControls {
       this.scene.remove(joyStickBall);
     }
 
-    this.joystickIsActive = false;
+    this.isJoystickAttached = false;
   };
 
   /**
@@ -191,27 +175,34 @@ class JoystickControls {
    * @param axis
    * @param angle
    */
-  private rotate = (axis: Vector3, angle: number) => {
-    this.quaternion.setFromAxisAngle(axis, angle);
+  private rotateAroundYAxis = (angle: number) => {
+    const yAxis = new Vector3(0, 1, 0);
+
+    this.quaternion.setFromAxisAngle(yAxis, angle);
+    this.target?.quaternion.premultiply(this.quaternion);
+  };
+
+  private rotateAroundXAxis = (angle: number) => {
+    const xAxis = new Vector3(1, 0, 0);
+
+    this.quaternion.setFromAxisAngle(xAxis, angle);
     this.target?.quaternion.premultiply(this.quaternion);
   };
 
   /**
-   * createRotation function used to calculate the amount of rotation
+   * function that updates the positioning, this needs to be called
+   * in the animation loop
    */
-  private createRotation = (): void => {
-    if (!this.isActive) {
+  public update = (): void => {
+    if (!this.isJoystickAttached) {
       return;
     }
 
-    /**
-     * TODO: xAxis and yAxis must be set
-     */
-    const moveX = this.ballAnchorPoint.x - this.baseAnchorPoint.x;
-    const moveY = this.ballAnchorPoint.y - this.baseAnchorPoint.y;
+    const moveX = this.touchPoint.x - this.baseAnchorPoint.x;
+    const moveY = this.touchPoint.y - this.baseAnchorPoint.y;
 
-    this.rotate(this.yAxis, moveX * this.rotateFactor);
-    this.rotate(this.xAxis, moveY * this.rotateFactor);
+    this.rotateAroundYAxis(moveX * this.rotateFactor);
+    this.rotateAroundXAxis(moveY * this.rotateFactor);
   };
 
   destroyTouchEventListeners = (): void => {
@@ -237,12 +228,10 @@ class JoystickControls {
     });
 
     document.addEventListener('touchmove', (event: TouchEvent) => {
-      if (this.debounceTime(150) && this.swipeDistanceIsMoreThan(event)) {
+      if (debounceTime(this.touchStart) && this.swipeDistanceIsMoreThan(event)) {
         // Return because we tapped instead
         return;
       }
-
-      this.isActive = true;
 
       if (this.preventAction()) {
         return;
@@ -250,16 +239,13 @@ class JoystickControls {
 
       const touch = event.touches.item(0);
 
-      if (!this.isActive) {
-        return;
-      }
+      this.touchPoint = new Vector2(touch?.clientX, touch?.clientY);
 
-      this.ballAnchorPoint = new Vector2(touch?.clientX, touch?.clientY);
       this.updateJoystickBallPosition(event);
     });
 
     document.addEventListener('touchend', () => {
-      if (this.debounceTime(150) || !this.joystickIsActive) {
+      if (!this.isJoystickAttached) {
         return;
       }
 
