@@ -1,6 +1,5 @@
 import './styles.scss';
 import * as THREE from 'three';
-// import TrackballControls from 'three-trackballcontrols';
 import JoystickControls from '../../src';
 import { Vector3 } from 'three';
 import { Quaternion } from 'three';
@@ -11,8 +10,6 @@ const createExample = () => {
   const camera = new THREE.PerspectiveCamera();
 
   camera.position.z = 300;
-
-  // const controls = new TrackballControls(camera, element);
 
   const renderer = new THREE.WebGLRenderer();
 
@@ -43,7 +40,6 @@ const createExample = () => {
     renderer.setSize(width, height);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
-    // controls.handleResize();
   };
 
   const quaternion = new Quaternion();
