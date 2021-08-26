@@ -2,6 +2,8 @@ import './styles.scss';
 import * as THREE from 'three';
 // import TrackballControls from 'three-trackballcontrols';
 import JoystickControls from '../../src';
+import { Vector3 } from 'three';
+import { Quaternion } from 'three';
 
 const createExample = () => {
   const element = document.getElementById('target');
@@ -44,11 +46,33 @@ const createExample = () => {
     // controls.handleResize();
   };
 
+  const quaternion = new Quaternion();
+
+  const rotateAroundYAxis = (angle: number) => {
+    const yAxis = new Vector3(0, 1, 0);
+
+    quaternion.setFromAxisAngle(yAxis, angle);
+    mesh.quaternion.premultiply(quaternion);
+  };
+
+  const rotateAroundXAxis = (angle: number) => {
+    const xAxis = new Vector3(1, 0, 0);
+
+    quaternion.setFromAxisAngle(xAxis, angle);
+    mesh.quaternion.premultiply(quaternion);
+  };
+
   const animate = () => {
     requestAnimationFrame(animate);
-    // mesh.rotation.y += 0.1 * Math.PI / 180;
-    // controls.update();
-    joystick.update();
+
+    joystick.update((
+      xRotationInRadians,
+      yRotationInRadians,
+    ) => {
+      rotateAroundXAxis(xRotationInRadians);
+      rotateAroundYAxis(yRotationInRadians);
+    });
+
     renderer.render(scene, camera);
   };
 

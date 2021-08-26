@@ -22,7 +22,7 @@ class JoystickControls {
   joystickTouchZone = 75;
   environment: Object3D = new Object3D();
   quaternion: Quaternion = new Quaternion();
-  rotateFactor = 0.0005;
+  movementScale = 0.0005;
   /**
    * Timestamp of when the user touched the screen.
    * This is used for de-bouncing the user interaction
@@ -47,17 +47,11 @@ class JoystickControls {
    */
   activateAfterPixelDistance = 50;
   /**
-   * Creation of joystick triggered
-   */
-  isActive = false;
-  /**
    * True wehn the joystick has been attached to the scene
    */
   isJoystickAttached = false;
   /**
-   * Use mesh for now
-   *
-   * TODO: Make this outside the joystick
+   * Target object to control
    */
   target: Object3D;
 
@@ -193,7 +187,7 @@ class JoystickControls {
    * function that updates the positioning, this needs to be called
    * in the animation loop
    */
-  public update = (): void => {
+  public update = (callback: (dx: number, dy: number) => void): void => {
     if (!this.isJoystickAttached) {
       return;
     }
@@ -201,8 +195,7 @@ class JoystickControls {
     const moveX = this.touchPoint.x - this.baseAnchorPoint.x;
     const moveY = this.touchPoint.y - this.baseAnchorPoint.y;
 
-    this.rotateAroundYAxis(moveX * this.rotateFactor);
-    this.rotateAroundXAxis(moveY * this.rotateFactor);
+    callback(moveY * this.movementScale, moveX * this.movementScale);
   };
 
   destroyTouchEventListeners = (): void => {
@@ -230,6 +223,7 @@ class JoystickControls {
     document.addEventListener('touchmove', (event: TouchEvent) => {
       if (debounceTime(this.touchStart) && this.swipeDistanceIsMoreThan(event)) {
         // Return because we tapped instead
+        console.log('d');
         return;
       }
 
@@ -252,10 +246,6 @@ class JoystickControls {
       this.touchStart = 0;
 
       this.removeJoystick();
-
-      setTimeout(() => {
-        this.isActive = false;
-      }, 150);
     });
   };
 }
