@@ -1,5 +1,5 @@
 module.exports = {
-  rootDir: './RotatingTargetExample.ts',
+  rootDir: './src',
   preset: 'ts-jest',
   testEnvironment: 'node',
   collectCoverage: true,

@@ -9,6 +9,7 @@ import {
   PerspectiveCamera,
   Object3D,
 } from 'three';
+import isTouchOutOfBounds from './helpers/isTouchOutOfBounds';
 
 const degreesToRadians = (degrees: number): number => {
   return degrees * (Math.PI / 180);
@@ -112,13 +113,6 @@ class JoystickControls {
     );
   };
 
-  private joystickIsInBounds = (touch: Touch): boolean => {
-    const x = Math.pow((touch.clientX - this.baseAnchorPoint.x), 2);
-    const y = Math.pow((touch.clientY - this.baseAnchorPoint.y), 2);
-    const d = Math.sqrt(x + y);
-
-    return (d <= this.joystickTouchZone);
-  };
 
   private createCircle = (
     name: string,
@@ -138,7 +132,7 @@ class JoystickControls {
     this.scene.add(joyStickBaseCircle);
   };
 
-  private attachJoystick = (event: TouchEvent) => {
+  private updateJoystickBallPosition = (event: TouchEvent) => {
     const joyStickBase = this.scene.getObjectByName('joystick-base');
     const joyStickBall = this.scene.getObjectByName('joystick-ball');
     const zoomScale = 1 / this.camera.zoom;
@@ -157,12 +151,18 @@ class JoystickControls {
       .add(direction.multiplyScalar(10));
 
     if (joyStickBase && joyStickBall) {
-      if (!this.joystickIsInBounds(touch)) {
-        const angle = Math.atan2(touch.clientY - this.baseAnchorPoint.y, touch.clientX - this.baseAnchorPoint.x) - degreesToRadians(90);
+      if (isTouchOutOfBounds(touch, this.baseAnchorPoint, this.joystickTouchZone)) {
+        console.log('Outside Base');
+        const angle = Math.atan2(
+          touch.clientY - this.baseAnchorPoint.y,
+          touch.clientX - this.baseAnchorPoint.x,
+        ) - degreesToRadians(90);
         const xDistance = Math.sin(angle) * this.joystickTouchZone;
         const yDistance = Math.cos(angle) * this.joystickTouchZone;
         direction = new Vector3(-xDistance, -yDistance, 0).normalize();
         position = joyStickBase.position.clone().add(direction);
+      } else {
+        console.log('Inside Base');
       }
       joyStickBall.position.copy(position);
       return;
@@ -255,7 +255,7 @@ class JoystickControls {
       }
 
       this.ballAnchorPoint = new Vector2(touch?.clientX, touch?.clientY);
-      this.attachJoystick(event);
+      this.updateJoystickBallPosition(event);
     });
 
     document.addEventListener('touchend', () => {
