@@ -6,7 +6,6 @@ import {
   Vector2,
   Vector3,
   PerspectiveCamera,
-  Object3D,
 } from 'three';
 import isTouchOutOfBounds from './helpers/isTouchOutOfBounds';
 import debounceTime from './helpers/debounceTime';
@@ -30,13 +29,6 @@ class JoystickControls {
    * @TODO: canvas so it currently jumps
    */
   joystickTouchZone = 75;
-  /**
-   * Used for scaling down the delta value of x and y
-   * that is passed to the update function's call back.
-   * You can use this to scale down user movement for controlling
-   * the speed.
-   */
-  deltaScale = 0.0005;
   /**
    * Timestamp of when the user touched the screen.
    * This is used for de-bouncing the user interaction
@@ -64,19 +56,13 @@ class JoystickControls {
    * True wehn the joystick has been attached to the scene
    */
   isJoystickAttached = false;
-  /**
-   * Target object to control
-   */
-  target: Object3D;
 
   constructor(
     camera: PerspectiveCamera,
     scene: Scene,
-    target: Object3D,
   ) {
     this.camera = camera;
     this.scene = scene;
-    this.target = target;
     this.createTouchEventListeners();
   }
 
@@ -168,21 +154,6 @@ class JoystickControls {
     this.isJoystickAttached = false;
   };
 
-  /**
-   * function that updates the positioning, this needs to be called
-   * in the animation loop
-   */
-  public update = (callback: (dx: number, dy: number) => void): void => {
-    if (!this.isJoystickAttached) {
-      return;
-    }
-
-    const moveX = this.touchPoint.x - this.baseAnchorPoint.x;
-    const moveY = this.touchPoint.y - this.baseAnchorPoint.y;
-
-    callback(moveY * this.deltaScale, moveX * this.deltaScale);
-  };
-
   destroyTouchEventListeners = (): void => {
     /**
      * TODO: Remove event listeners from the document
@@ -232,6 +203,27 @@ class JoystickControls {
 
       this.removeJoystick();
     });
+  };
+
+  protected getMovement = (): TMovement | null => {
+    if (!this.isJoystickAttached) {
+      return null;
+    }
+
+    return {
+      moveX: this.touchPoint.y - this.baseAnchorPoint.y,
+      moveY: this.touchPoint.x - this.baseAnchorPoint.x,
+    };
+  };
+
+  /**
+   * function that updates the positioning, this needs to be called
+   * in the animation loop
+   */
+  public update = (callback?: (movement?: TMovement|null) => void): void => {
+    const movement = this.getMovement();
+
+    callback?.(movement);
   };
 }
 

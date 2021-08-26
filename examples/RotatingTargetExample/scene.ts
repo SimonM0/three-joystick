@@ -1,8 +1,7 @@
 import './styles.scss';
 import * as THREE from 'three';
-import JoystickControls from '../../src';
-import { Vector3 } from 'three';
-import { Quaternion } from 'three';
+import RotationJoystickControls from '../../src/RotationJoystickControls';
+// import JoystickControls from '../../src';
 
 const createExample = () => {
   const element = document.getElementById('target');
@@ -21,8 +20,9 @@ const createExample = () => {
     wireframeLinewidth: 1,
     color: 0xFFAACC,
   });
-  const mesh = new THREE.Mesh(geometry, material);
-  const joystick = new JoystickControls(camera, scene, mesh);
+  const actor = new THREE.Mesh(geometry, material);
+  // const joystick = new JoystickControls(camera, scene);
+  const rotationJoystick = new RotationJoystickControls(camera, scene, actor);
 
   const pointLight = new THREE.PointLight(0xFFFFFF);
   pointLight.position.x = -100;
@@ -30,7 +30,7 @@ const createExample = () => {
   pointLight.position.z = 400;
 
   scene.add(camera);
-  scene.add(mesh);
+  scene.add(actor);
   scene.add(pointLight);
 
   const resize = () => {
@@ -42,32 +42,16 @@ const createExample = () => {
     camera.updateProjectionMatrix();
   };
 
-  const quaternion = new Quaternion();
-
-  const rotateAroundYAxis = (angle: number) => {
-    const yAxis = new Vector3(0, 1, 0);
-
-    quaternion.setFromAxisAngle(yAxis, angle);
-    mesh.quaternion.premultiply(quaternion);
-  };
-
-  const rotateAroundXAxis = (angle: number) => {
-    const xAxis = new Vector3(1, 0, 0);
-
-    quaternion.setFromAxisAngle(xAxis, angle);
-    mesh.quaternion.premultiply(quaternion);
-  };
-
   const animate = () => {
     requestAnimationFrame(animate);
 
-    joystick.update((
-      xRotationInRadians,
-      yRotationInRadians,
-    ) => {
-      rotateAroundXAxis(xRotationInRadians);
-      rotateAroundYAxis(yRotationInRadians);
-    });
+    // joystick.update((movement) => {
+    //   if (movement) {
+    //     console.log(movement);
+    //   }
+    // });
+
+    rotationJoystick.update();
 
     renderer.render(scene, camera);
   };
