@@ -21,7 +21,6 @@ class JoystickControls {
   camera: PerspectiveCamera;
   joystickTouchZone = 75;
   environment: Object3D = new Object3D();
-  quaternion: Quaternion = new Quaternion();
   movementScale = 0.0005;
   /**
    * Timestamp of when the user touched the screen.
@@ -162,25 +161,6 @@ class JoystickControls {
     }
 
     this.isJoystickAttached = false;
-  };
-
-  /**
-   * Rotates the environment
-   * @param axis
-   * @param angle
-   */
-  private rotateAroundYAxis = (angle: number) => {
-    const yAxis = new Vector3(0, 1, 0);
-
-    this.quaternion.setFromAxisAngle(yAxis, angle);
-    this.target?.quaternion.premultiply(this.quaternion);
-  };
-
-  private rotateAroundXAxis = (angle: number) => {
-    const xAxis = new Vector3(1, 0, 0);
-
-    this.quaternion.setFromAxisAngle(xAxis, angle);
-    this.target?.quaternion.premultiply(this.quaternion);
   };
 
   /**
