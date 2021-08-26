@@ -13,8 +13,13 @@ class RotationJoystickControls extends JoystickControls {
    * the speed.
    */
   public deltaScale = 0.0005;
-  private xAxis: Vector3 = new Vector3(1, 0, 0);
-  private yAxis: Vector3 = new Vector3(0, 1, 0);
+  /**
+   * TODO: Document the reassigning axis feature
+   *
+   * @example rotationJoystick.verticalMovementAxis = new Vector3(0, 0, 1);
+   */
+  public verticalMovementAxis: Vector3 = new Vector3(1, 0, 0);
+  public horzontalMovementAxis: Vector3 = new Vector3(0, 1, 0);
   private quaternion: Quaternion = new Quaternion();
 
   constructor(
@@ -26,22 +31,23 @@ class RotationJoystickControls extends JoystickControls {
     this.target = target;
   }
 
-  private rotateAroundYAxis = (angle: number) => {
-    this.quaternion.setFromAxisAngle(this.yAxis, angle);
+  private rotateVerticalMovement = (angle: number) => {
+    this.quaternion.setFromAxisAngle(this.verticalMovementAxis, angle);
     this.target.quaternion.premultiply(this.quaternion);
   };
 
-  private rotateAroundXAxis = (angle: number) => {
-    this.quaternion.setFromAxisAngle(this.xAxis, angle);
+  private rotateHorzontalMovement = (angle: number) => {
+    this.quaternion.setFromAxisAngle(this.horzontalMovementAxis, angle);
     this.target.quaternion.premultiply(this.quaternion);
   };
+
 
   public update = (): void => {
-    const movement = this.getMovement();
+    const joystickMovement = this.getJoystickMovement();
 
-    if (movement) {
-      this.rotateAroundXAxis(movement.moveX * this.deltaScale);
-      this.rotateAroundYAxis(movement.moveY * this.deltaScale);
+    if (joystickMovement) {
+      this.rotateVerticalMovement(joystickMovement.moveX * this.deltaScale);
+      this.rotateHorzontalMovement(joystickMovement.moveY * this.deltaScale);
     }
   }
 }

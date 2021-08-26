@@ -5,7 +5,7 @@ import {
   Scene,
   Vector2,
   Vector3,
-  PerspectiveCamera,
+  PerspectiveCamera, Object3D,
 } from 'three';
 import isTouchOutOfBounds from './helpers/isTouchOutOfBounds';
 import debounceTime from './helpers/debounceTime';
@@ -25,8 +25,8 @@ class JoystickControls {
    * joystick base. It will snap the joystick ball to the bounds
    * of the base of the joystick
    *
-   * @TODO: Needs fixing because the pixel change does not correlate to the
-   * @TODO: canvas so it currently jumps
+   * TODO: Needs fixing because the pixel change does not correlate to the
+   * TODO: canvas so it currently jumps
    */
   joystickTouchZone = 75;
   /**
@@ -79,6 +79,10 @@ class JoystickControls {
     document.removeEventListener('touchend', this.handleTouchEnd);
   };
 
+  /**
+   * TODO Extract as helper
+   * @param touch
+   */
   private swipeDistanceIsMoreThan = (touch: TouchEvent) => {
     const distance = touch.touches?.item(0);
 
@@ -95,6 +99,12 @@ class JoystickControls {
     );
   };
 
+  /**
+   * Draws the joystick base and ball
+   *
+   * TODO: Add feature to allow an image to be loaded.
+   * TODO: Add option to change color and size of the joystick
+   */
   private createCircle = (
     name: string,
     position: Vector3,
@@ -114,55 +124,86 @@ class JoystickControls {
     this.scene.add(joyStickBaseCircle);
   };
 
-  private updateJoystickBallPosition = (event: TouchEvent) => {
+  private attachJoystick = (positionInScene: Vector3) => {
+    //** Joystick Base Position
+    this.createCircle('joystick-base', positionInScene, 0x666666, 0.9);
+    this.createCircle('joystick-ball', positionInScene, 0x444444, 0.5);
+    this.isJoystickAttached = true;
+  };
+
+  getJoystickBallPosition = (
+    touch: Touch,
+    positionInScene: Vector3,
+  ): Vector3 => {
+    if (!isTouchOutOfBounds(touch, this.baseAnchorPoint, this.joystickTouchZone)) {
+      /**
+       * Touch was inside the Base so just set the joystick ball to that
+       * position
+       */
+      return positionInScene;
+    }
+
+    /**
+     * Touch was outside Base so restrict the ball to the base perimeter
+     */
+    const angle = Math.atan2(
+      touch.clientY - this.baseAnchorPoint.y,
+      touch.clientX - this.baseAnchorPoint.x,
+    ) - degreesToRadians(90);
+    const xDistance = Math.sin(angle) * this.joystickTouchZone;
+    const yDistance = Math.cos(angle) * this.joystickTouchZone;
+    const direction = new Vector3(-xDistance, -yDistance, 0).normalize();
     const joyStickBase = this.scene.getObjectByName('joystick-base');
-    const joyStickBall = this.scene.getObjectByName('joystick-ball');
+
+    /**
+     * positionInScene restricted to the perimeter of the joystick
+     * base
+     */
+    return (joyStickBase as Object3D).position.clone().add(direction);
+  };
+
+  private updateJoystickBallPosition = (event: TouchEvent) => {
     const touch = event.touches.item(0);
 
     if (touch === null) {
       return;
     }
 
-    // TODO: Set min, max and hotzone once to this
     const touchX = (touch.clientX / window.innerWidth) * 2 - 1;
     const touchY = -(touch.clientY / window.innerHeight) * 2 + 1;
-    const vector = new Vector3(touchX, touchY, 0.5).unproject(this.camera);
-    let direction = vector.sub(this.camera.position).normalize();
-    let position = this.camera.position.clone()
+    const vector = new Vector3(touchX, touchY, 0.5)
+      .unproject(this.camera);
+    const direction = vector
+      .sub(this.camera.position)
+      .normalize();
+    const positionInScene = this
+      .camera
+      .position
+      .clone()
       .add(direction.multiplyScalar(10));
 
-    if (joyStickBase && joyStickBall) {
-      if (isTouchOutOfBounds(touch, this.baseAnchorPoint, this.joystickTouchZone)) {
-        console.log('Outside Base');
-        const angle = Math.atan2(
-          touch.clientY - this.baseAnchorPoint.y,
-          touch.clientX - this.baseAnchorPoint.x,
-        ) - degreesToRadians(90);
-        const xDistance = Math.sin(angle) * this.joystickTouchZone;
-        const yDistance = Math.cos(angle) * this.joystickTouchZone;
-        direction = new Vector3(-xDistance, -yDistance, 0).normalize();
-        position = joyStickBase.position.clone().add(direction);
-      } else {
-        console.log('Inside Base');
-      }
-      joyStickBall.position.copy(position);
-      return;
+    if (!this.isJoystickAttached) {
+      /**
+       * If there is no base or ball, then we need to attach the joystick
+       */
+      return this.attachJoystick(positionInScene);
     }
 
-    //** Joystick Base Position
-    this.createCircle('joystick-base', position, 0x666666, 0.9);
-    this.createCircle('joystick-ball', position, 0x444444, 0.5);
-    this.isJoystickAttached = true;
+    const joyStickBall = this.scene.getObjectByName('joystick-ball');
+    const joystickBallPosition = this.getJoystickBallPosition(
+      touch,
+      positionInScene,
+    );
+
+    /**
+     * Inside Base so just copy the position
+     */
+    joyStickBall?.position.copy(joystickBallPosition);
   };
 
   private removeJoystick = () => {
-    const joystickBase = this.scene.getObjectByName('joystick-base');
-    const joyStickBall = this.scene.getObjectByName('joystick-ball');
-
-    if (joystickBase && joyStickBall) {
-      this.scene.remove(joystickBase);
-      this.scene.remove(joyStickBall);
-    }
+    this.scene.getObjectByName('joystick-base')?.removeFromParent();
+    this.scene.getObjectByName('joystick-ball')?.removeFromParent();
 
     this.isJoystickAttached = false;
   };
@@ -210,7 +251,7 @@ class JoystickControls {
     this.removeJoystick();
   };
 
-  protected getMovement = (): TMovement | null => {
+  protected getJoystickMovement = (): TMovement | null => {
     if (!this.isJoystickAttached) {
       return null;
     }
@@ -225,8 +266,8 @@ class JoystickControls {
    * function that updates the positioning, this needs to be called
    * in the animation loop
    */
-  public update = (callback?: (movement?: TMovement|null) => void): void => {
-    const movement = this.getMovement();
+  public update = (callback?: (movement?: TMovement | null) => void): void => {
+    const movement = this.getJoystickMovement();
 
     callback?.(movement);
   };
