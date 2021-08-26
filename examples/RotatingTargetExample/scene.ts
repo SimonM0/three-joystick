@@ -18,7 +18,7 @@ const createExample = () => {
   const geometry = new THREE.SphereGeometry(50, 32, 16);
   const material = new THREE.MeshPhongMaterial({
     wireframe: true,
-    wireframeLinewidth: 10,
+    wireframeLinewidth: 1,
     color: 0xFFAACC,
   });
   const mesh = new THREE.Mesh(geometry, material);

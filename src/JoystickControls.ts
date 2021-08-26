@@ -5,23 +5,38 @@ import {
   Scene,
   Vector2,
   Vector3,
-  Quaternion,
   PerspectiveCamera,
   Object3D,
 } from 'three';
 import isTouchOutOfBounds from './helpers/isTouchOutOfBounds';
 import debounceTime from './helpers/debounceTime';
-
-const degreesToRadians = (degrees: number): number => {
-  return degrees * (Math.PI / 180);
-};
+import degreesToRadians from './helpers/degreesToRadians';
 
 class JoystickControls {
+  /**
+   * This is the three.js scene
+   */
   scene: Scene;
+  /**
+   * This is the three.js  camera
+   */
   camera: PerspectiveCamera;
+  /**
+   * This is used to detect if the user has moved outside the
+   * joystick base. It will snap the joystick ball to the bounds
+   * of the base of the joystick
+   *
+   * @TODO: Needs fixing because the pixel change does not correlate to the
+   * @TODO: canvas so it currently jumps
+   */
   joystickTouchZone = 75;
-  environment: Object3D = new Object3D();
-  movementScale = 0.0005;
+  /**
+   * Used for scaling down the delta value of x and y
+   * that is passed to the update function's call back.
+   * You can use this to scale down user movement for controlling
+   * the speed.
+   */
+  deltaScale = 0.0005;
   /**
    * Timestamp of when the user touched the screen.
    * This is used for de-bouncing the user interaction
@@ -65,15 +80,6 @@ class JoystickControls {
     this.createTouchEventListeners();
   }
 
-  /**
-   * TODO: Find out why we don't do iPhone
-   */
-  private isAndroid = (event: TouchEvent) => {
-    if (navigator.userAgent.match(/Android/i)) {
-      event.preventDefault();
-    }
-  };
-
   private swipeDistanceIsMoreThan = (touch: TouchEvent) => {
     const distance = touch.touches?.item(0);
 
@@ -90,14 +96,14 @@ class JoystickControls {
     );
   };
 
-
   private createCircle = (
     name: string,
     position: Vector3,
     color: number,
     size: number,
   ) => {
-    const geometry = new CircleGeometry(size, 72);
+    const zoomScale = 1 / this.camera.zoom;
+    const geometry = new CircleGeometry(size * zoomScale, 72);
     const material = new MeshLambertMaterial({
       color: color,
       opacity: 0.5,
@@ -112,7 +118,6 @@ class JoystickControls {
   private updateJoystickBallPosition = (event: TouchEvent) => {
     const joyStickBase = this.scene.getObjectByName('joystick-base');
     const joyStickBall = this.scene.getObjectByName('joystick-ball');
-    const zoomScale = 1 / this.camera.zoom;
     const touch = event.touches.item(0);
 
     if (touch === null) {
@@ -146,8 +151,8 @@ class JoystickControls {
     }
 
     //** Joystick Base Position
-    this.createCircle('joystick-base', position, 0x666666, 0.9 * zoomScale);
-    this.createCircle('joystick-ball', position, 0x444444, 0.5 * zoomScale);
+    this.createCircle('joystick-base', position, 0x666666, 0.9);
+    this.createCircle('joystick-ball', position, 0x444444, 0.5);
     this.isJoystickAttached = true;
   };
 
@@ -175,7 +180,7 @@ class JoystickControls {
     const moveX = this.touchPoint.x - this.baseAnchorPoint.x;
     const moveY = this.touchPoint.y - this.baseAnchorPoint.y;
 
-    callback(moveY * this.movementScale, moveX * this.movementScale);
+    callback(moveY * this.deltaScale, moveX * this.deltaScale);
   };
 
   destroyTouchEventListeners = (): void => {
