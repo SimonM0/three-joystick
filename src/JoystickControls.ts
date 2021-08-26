@@ -63,8 +63,21 @@ class JoystickControls {
   ) {
     this.camera = camera;
     this.scene = scene;
-    this.createTouchEventListeners();
+
+    this.create();
   }
+
+  public create = (): void => {
+    document.addEventListener('touchstart', this.handleTouchStart);
+    document.addEventListener('touchmove', this.handleTouchMove);
+    document.addEventListener('touchend', this.handleTouchEnd);
+  };
+
+  public destroy = (): void => {
+    document.removeEventListener('touchstart', this.handleTouchStart);
+    document.removeEventListener('touchmove', this.handleTouchMove);
+    document.removeEventListener('touchend', this.handleTouchEnd);
+  };
 
   private swipeDistanceIsMoreThan = (touch: TouchEvent) => {
     const distance = touch.touches?.item(0);
@@ -154,55 +167,47 @@ class JoystickControls {
     this.isJoystickAttached = false;
   };
 
-  destroyTouchEventListeners = (): void => {
-    /**
-     * TODO: Remove event listeners from the document
-     */
+  private handleTouchStart = (event: TouchEvent) => {
+    if (this.preventAction()) {
+      return;
+    }
+
+    const touch = event.touches.item(0);
+
+    if (touch === null) {
+      return;
+    }
+
+    this.baseAnchorPoint = new Vector2(touch.clientX, touch.clientY);
+    this.touchStart = Date.now();
   };
 
-  private createTouchEventListeners = () => {
-    document.addEventListener('touchstart', (event: TouchEvent) => {
-      if (this.preventAction()) {
-        return;
-      }
+  private handleTouchMove = (event: TouchEvent) => {
+    if (debounceTime(this.touchStart) && this.swipeDistanceIsMoreThan(event)) {
+      // Return because we tapped instead
+      console.log('d');
+      return;
+    }
 
-      const touch = event.touches.item(0);
+    if (this.preventAction()) {
+      return;
+    }
 
-      if (touch === null) {
-        return;
-      }
+    const touch = event.touches.item(0);
 
-      this.baseAnchorPoint = new Vector2(touch.clientX, touch.clientY);
-      this.touchStart = Date.now();
-    });
+    this.touchPoint = new Vector2(touch?.clientX, touch?.clientY);
 
-    document.addEventListener('touchmove', (event: TouchEvent) => {
-      if (debounceTime(this.touchStart) && this.swipeDistanceIsMoreThan(event)) {
-        // Return because we tapped instead
-        console.log('d');
-        return;
-      }
+    this.updateJoystickBallPosition(event);
+  };
 
-      if (this.preventAction()) {
-        return;
-      }
+  private handleTouchEnd = () => {
+    if (!this.isJoystickAttached) {
+      return;
+    }
 
-      const touch = event.touches.item(0);
+    this.touchStart = 0;
 
-      this.touchPoint = new Vector2(touch?.clientX, touch?.clientY);
-
-      this.updateJoystickBallPosition(event);
-    });
-
-    document.addEventListener('touchend', () => {
-      if (!this.isJoystickAttached) {
-        return;
-      }
-
-      this.touchStart = 0;
-
-      this.removeJoystick();
-    });
+    this.removeJoystick();
   };
 
   protected getMovement = (): TMovement | null => {
