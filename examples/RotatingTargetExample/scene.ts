@@ -10,7 +10,9 @@ const createExample = () => {
 
   camera.position.z = 300;
 
-  const renderer = new THREE.WebGLRenderer();
+  const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+  });
 
   element?.appendChild(renderer.domElement);
 

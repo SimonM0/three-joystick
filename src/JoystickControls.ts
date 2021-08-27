@@ -5,11 +5,12 @@ import {
   Scene,
   Vector2,
   Vector3,
-  PerspectiveCamera, Object3D,
+  PerspectiveCamera,
+  Object3D,
 } from 'three';
 import isTouchOutOfBounds from './helpers/isTouchOutOfBounds';
-import debounceTime from './helpers/debounceTime';
 import degreesToRadians from './helpers/degreesToRadians';
+import getPositionInScene from './helpers/getPositionInScene';
 
 class JoystickControls {
   /**
@@ -30,11 +31,6 @@ class JoystickControls {
    */
   joystickTouchZone = 75;
   /**
-   * Timestamp of when the user touched the screen.
-   * This is used for de-bouncing the user interaction
-   */
-  touchStart = 0;
-  /**
    * Anchor of the joystick base
    */
   baseAnchorPoint: Vector2 = new Vector2();
@@ -48,14 +44,13 @@ class JoystickControls {
    */
   preventAction: () => boolean = () => false;
   /**
-   * The minimum distance required for the joystick to
-   * activate. Defaults to 50px
-   */
-  activateAfterPixelDistance = 50;
-  /**
    * True wehn the joystick has been attached to the scene
    */
   isJoystickAttached = false;
+  /**
+   * Setting joystickScale will scale the joystick up or down in size
+   */
+  joystickScale = 10;
 
   constructor(
     camera: PerspectiveCamera,
@@ -79,24 +74,41 @@ class JoystickControls {
     document.removeEventListener('touchend', this.handleTouchEnd);
   };
 
-  /**
-   * TODO Extract as helper
-   * @param touch
-   */
-  private swipeDistanceIsMoreThan = (touch: TouchEvent) => {
-    const distance = touch.touches?.item(0);
-
-    if (distance === null) {
+  private handleTouchStart = (event: TouchEvent) => {
+    if (this.preventAction()) {
       return;
     }
 
-    const xDistance = Math.abs(this.baseAnchorPoint.x - distance.clientX);
-    const yDistance = Math.abs(this.baseAnchorPoint.y - distance.clientY);
+    const touch = event.touches.item(0);
 
-    return (
-      (xDistance > this.activateAfterPixelDistance) ||
-      (yDistance > this.activateAfterPixelDistance)
-    );
+    if (touch === null) {
+      return;
+    }
+
+    this.baseAnchorPoint = new Vector2(touch.clientX, touch.clientY);
+  };
+
+  private handleTouchMove = (event: TouchEvent) => {
+    if (this.preventAction()) {
+      return;
+    }
+
+    const touch = event.touches.item(0);
+
+    this.touchPoint = new Vector2(touch?.clientX, touch?.clientY);
+
+    this.updateJoystickBallPosition(event);
+  };
+
+  private handleTouchEnd = () => {
+    if (!this.isJoystickAttached) {
+      return;
+    }
+
+    this.scene.getObjectByName('joystick-base')?.removeFromParent();
+    this.scene.getObjectByName('joystick-ball')?.removeFromParent();
+
+    this.isJoystickAttached = false;
   };
 
   /**
@@ -105,7 +117,7 @@ class JoystickControls {
    * TODO: Add feature to allow an image to be loaded.
    * TODO: Add option to change color and size of the joystick
    */
-  private createCircle = (
+  private attachUserInterface = (
     name: string,
     position: Vector3,
     color: number,
@@ -116,22 +128,34 @@ class JoystickControls {
     const material = new MeshLambertMaterial({
       color: color,
       opacity: 0.5,
+      transparent: true,
     });
-    material.transparent = true;
-    const joyStickBaseCircle = new Mesh(geometry, material);
-    joyStickBaseCircle.name = name;
-    joyStickBaseCircle.position.copy(position);
-    this.scene.add(joyStickBaseCircle);
+    const uiElement = new Mesh(geometry, material);
+
+    uiElement.name = name;
+    uiElement.position.copy(position);
+
+    this.scene.add(uiElement);
   };
 
   private attachJoystick = (positionInScene: Vector3) => {
-    //** Joystick Base Position
-    this.createCircle('joystick-base', positionInScene, 0x666666, 0.9);
-    this.createCircle('joystick-ball', positionInScene, 0x444444, 0.5);
+    this.attachUserInterface(
+      'joystick-base',
+      positionInScene,
+      0xFFFFFF,
+      0.9,
+    );
+    this.attachUserInterface(
+      'joystick-ball',
+      positionInScene,
+      0xCCCCCC,
+      0.5,
+    );
+
     this.isJoystickAttached = true;
   };
 
-  getJoystickBallPosition = (
+  private getJoystickBallPosition = (
     touch: Touch,
     positionInScene: Vector3,
   ): Vector3 => {
@@ -169,18 +193,11 @@ class JoystickControls {
       return;
     }
 
-    const touchX = (touch.clientX / window.innerWidth) * 2 - 1;
-    const touchY = -(touch.clientY / window.innerHeight) * 2 + 1;
-    const vector = new Vector3(touchX, touchY, 0.5)
-      .unproject(this.camera);
-    const direction = vector
-      .sub(this.camera.position)
-      .normalize();
-    const positionInScene = this
-      .camera
-      .position
-      .clone()
-      .add(direction.multiplyScalar(10));
+    const positionInScene = getPositionInScene(
+      touch,
+      this.camera,
+      this.joystickScale,
+    );
 
     if (!this.isJoystickAttached) {
       /**
@@ -201,56 +218,10 @@ class JoystickControls {
     joyStickBall?.position.copy(joystickBallPosition);
   };
 
-  private removeJoystick = () => {
-    this.scene.getObjectByName('joystick-base')?.removeFromParent();
-    this.scene.getObjectByName('joystick-ball')?.removeFromParent();
-
-    this.isJoystickAttached = false;
-  };
-
-  private handleTouchStart = (event: TouchEvent) => {
-    if (this.preventAction()) {
-      return;
-    }
-
-    const touch = event.touches.item(0);
-
-    if (touch === null) {
-      return;
-    }
-
-    this.baseAnchorPoint = new Vector2(touch.clientX, touch.clientY);
-    this.touchStart = Date.now();
-  };
-
-  private handleTouchMove = (event: TouchEvent) => {
-    if (debounceTime(this.touchStart) && this.swipeDistanceIsMoreThan(event)) {
-      // Return because we tapped instead
-      console.log('d');
-      return;
-    }
-
-    if (this.preventAction()) {
-      return;
-    }
-
-    const touch = event.touches.item(0);
-
-    this.touchPoint = new Vector2(touch?.clientX, touch?.clientY);
-
-    this.updateJoystickBallPosition(event);
-  };
-
-  private handleTouchEnd = () => {
-    if (!this.isJoystickAttached) {
-      return;
-    }
-
-    this.touchStart = 0;
-
-    this.removeJoystick();
-  };
-
+  /**
+   * Calculates and returns the distance the user has moved the
+   * joystick from the center of the joystick base.
+   */
   protected getJoystickMovement = (): TMovement | null => {
     if (!this.isJoystickAttached) {
       return null;

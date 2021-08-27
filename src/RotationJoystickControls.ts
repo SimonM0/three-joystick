@@ -12,7 +12,7 @@ class RotationJoystickControls extends JoystickControls {
    * You can use this to scale down user movement for controlling
    * the speed.
    */
-  public deltaScale = 0.0005;
+  public deltaScale = 0.001;
   /**
    * TODO: Document the reassigning axis feature
    *
