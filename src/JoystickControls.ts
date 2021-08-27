@@ -156,7 +156,7 @@ class JoystickControls {
     this.scene.getObjectByName('joystick-ball')?.removeFromParent();
 
     this.isJoystickAttached = false;
-    this.interactionHasBegan = false
+    this.interactionHasBegan = false;
   };
 
   /**

@@ -1,5 +1,14 @@
 import { Vector2 } from 'three';
 
+/**
+ * Currently unused, but this function can determine if a user
+ * has swiped more than a set distance
+ *
+ * @param clientX
+ * @param clientY
+ * @param touchStart
+ * @param minDistance
+ */
 const userSwipedMoreThan = (
   clientX: number,
   clientY: number,
