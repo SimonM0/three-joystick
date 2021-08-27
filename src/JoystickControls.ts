@@ -44,7 +44,11 @@ class JoystickControls {
    */
   preventAction: () => boolean = () => false;
   /**
-   * True wehn the joystick has been attached to the scene
+   * True when user has begun interaction
+   */
+  interactionHasBegan = false;
+  /**
+   * True when the joystick has been attached to the scene
    */
   isJoystickAttached = false;
   /**
@@ -62,18 +66,9 @@ class JoystickControls {
     this.create();
   }
 
-  public create = (): void => {
-    document.addEventListener('touchstart', this.handleTouchStart);
-    document.addEventListener('touchmove', this.handleTouchMove);
-    document.addEventListener('touchend', this.handleTouchEnd);
-  };
-
-  public destroy = (): void => {
-    document.removeEventListener('touchstart', this.handleTouchStart);
-    document.removeEventListener('touchmove', this.handleTouchMove);
-    document.removeEventListener('touchend', this.handleTouchEnd);
-  };
-
+  /**
+   * Touch start event listener
+   */
   private handleTouchStart = (event: TouchEvent) => {
     if (this.preventAction()) {
       return;
@@ -85,9 +80,34 @@ class JoystickControls {
       return;
     }
 
-    this.baseAnchorPoint = new Vector2(touch.clientX, touch.clientY);
+    this.onStart(touch.clientX, touch.clientY);
   };
 
+  /**
+   * Mouse down event listener
+   */
+  private handleMouseDown = (event: MouseEvent) => {
+    if (this.preventAction()) {
+      return;
+    }
+
+    /**
+     * TODO: Detect if moved more than, then
+     */
+    this.onStart(event.clientX, event.clientY);
+  };
+
+  /**
+   * Plots the anchor point
+   */
+  private onStart = (clientX: number, clientY: number) => {
+    this.baseAnchorPoint = new Vector2(clientX, clientY);
+    this.interactionHasBegan = true;
+  };
+
+  /**
+   * Touch move event listener
+   */
   private handleTouchMove = (event: TouchEvent) => {
     if (this.preventAction()) {
       return;
@@ -95,11 +115,38 @@ class JoystickControls {
 
     const touch = event.touches.item(0);
 
-    this.touchPoint = new Vector2(touch?.clientX, touch?.clientY);
-
-    this.updateJoystickBallPosition(event);
+    if (touch) {
+      this.onMove(touch.clientX, touch.clientY);
+    }
   };
 
+  /**
+   * Mouse move event listener
+   */
+  private handleMouseMove = (event: MouseEvent) => {
+    if (this.preventAction()) {
+      return;
+    }
+
+    this.onMove(event.clientX, event.clientY);
+  };
+
+  /**
+   * Updates the joystick position during user interaction
+   */
+  private onMove = (clientX: number, clientY: number) => {
+    if (!this.interactionHasBegan) {
+      return;
+    }
+
+    this.touchPoint = new Vector2(clientX, clientY);
+
+    this.updateJoystickBallPosition(clientX, clientY);
+  };
+
+  /**
+   * Clean up joystick when the user interaction has finished
+   */
   private handleTouchEnd = () => {
     if (!this.isJoystickAttached) {
       return;
@@ -109,6 +156,7 @@ class JoystickControls {
     this.scene.getObjectByName('joystick-ball')?.removeFromParent();
 
     this.isJoystickAttached = false;
+    this.interactionHasBegan = false
   };
 
   /**
@@ -117,7 +165,7 @@ class JoystickControls {
    * TODO: Add feature to allow an image to be loaded.
    * TODO: Add option to change color and size of the joystick
    */
-  private attachUserInterface = (
+  private attachJoystickUI = (
     name: string,
     position: Vector3,
     color: number,
@@ -138,14 +186,17 @@ class JoystickControls {
     this.scene.add(uiElement);
   };
 
+  /**
+   * Creates the ball and base of the joystick
+   */
   private attachJoystick = (positionInScene: Vector3) => {
-    this.attachUserInterface(
+    this.attachJoystickUI(
       'joystick-base',
       positionInScene,
       0xFFFFFF,
       0.9,
     );
-    this.attachUserInterface(
+    this.attachJoystickUI(
       'joystick-ball',
       positionInScene,
       0xCCCCCC,
@@ -155,46 +206,54 @@ class JoystickControls {
     this.isJoystickAttached = true;
   };
 
+  /**
+   * Calculates if the touch point was outside the joystick and
+   * either returns the joystick ball position bound to the perimeter of
+   * the base, or the position inside the base.
+   */
   private getJoystickBallPosition = (
-    touch: Touch,
+    clientX: number,
+    clientY: number,
     positionInScene: Vector3,
   ): Vector3 => {
-    if (!isTouchOutOfBounds(touch, this.baseAnchorPoint, this.joystickTouchZone)) {
+    const touchWasOutsideJoystick = isTouchOutOfBounds(
+      clientX,
+      clientY,
+      this.baseAnchorPoint,
+      this.joystickTouchZone,
+    );
+
+    if (touchWasOutsideJoystick) {
       /**
-       * Touch was inside the Base so just set the joystick ball to that
-       * position
+       * Touch was outside Base so restrict the ball to the base perimeter
        */
-      return positionInScene;
+      const angle = Math.atan2(
+        clientY - this.baseAnchorPoint.y,
+        clientX - this.baseAnchorPoint.x,
+      ) - degreesToRadians(90);
+      const xDistance = Math.sin(angle) * this.joystickTouchZone;
+      const yDistance = Math.cos(angle) * this.joystickTouchZone;
+      const direction = new Vector3(-xDistance, -yDistance, 0).normalize();
+      const joyStickBase = this.scene.getObjectByName('joystick-base');
+
+      /**
+       * positionInScene restricted to the perimeter of the joystick
+       * base
+       */
+      return (joyStickBase as Object3D).position.clone().add(direction);
     }
 
     /**
-     * Touch was outside Base so restrict the ball to the base perimeter
+     * Touch was inside the Base so just set the joystick ball to that
+     * position
      */
-    const angle = Math.atan2(
-      touch.clientY - this.baseAnchorPoint.y,
-      touch.clientX - this.baseAnchorPoint.x,
-    ) - degreesToRadians(90);
-    const xDistance = Math.sin(angle) * this.joystickTouchZone;
-    const yDistance = Math.cos(angle) * this.joystickTouchZone;
-    const direction = new Vector3(-xDistance, -yDistance, 0).normalize();
-    const joyStickBase = this.scene.getObjectByName('joystick-base');
-
-    /**
-     * positionInScene restricted to the perimeter of the joystick
-     * base
-     */
-    return (joyStickBase as Object3D).position.clone().add(direction);
+    return positionInScene;
   };
 
-  private updateJoystickBallPosition = (event: TouchEvent) => {
-    const touch = event.touches.item(0);
-
-    if (touch === null) {
-      return;
-    }
-
+  private updateJoystickBallPosition = (clientX: number, clientY: number) => {
     const positionInScene = getPositionInScene(
-      touch,
+      clientX,
+      clientY,
       this.camera,
       this.joystickScale,
     );
@@ -208,7 +267,8 @@ class JoystickControls {
 
     const joyStickBall = this.scene.getObjectByName('joystick-ball');
     const joystickBallPosition = this.getJoystickBallPosition(
-      touch,
+      clientX,
+      clientY,
       positionInScene,
     );
 
@@ -231,6 +291,30 @@ class JoystickControls {
       moveX: this.touchPoint.y - this.baseAnchorPoint.y,
       moveY: this.touchPoint.x - this.baseAnchorPoint.x,
     };
+  };
+
+  /**
+   * Adds event listeners to the document
+   */
+  public create = (): void => {
+    window.addEventListener('touchstart', this.handleTouchStart);
+    window.addEventListener('touchmove', this.handleTouchMove);
+    window.addEventListener('touchend', this.handleTouchEnd);
+    window.addEventListener('mousedown', this.handleMouseDown);
+    window.addEventListener('mousemove', this.handleMouseMove);
+    window.addEventListener('mouseup', this.handleTouchEnd);
+  };
+
+  /**
+   * Removes event listeners from the document
+   */
+  public destroy = (): void => {
+    window.removeEventListener('touchstart', this.handleTouchStart);
+    window.removeEventListener('touchmove', this.handleTouchMove);
+    window.removeEventListener('touchend', this.handleTouchEnd);
+    window.removeEventListener('mousedown', this.handleMouseDown);
+    window.removeEventListener('mousemove', this.handleMouseMove);
+    window.removeEventListener('mouseup', this.handleTouchEnd);
   };
 
   /**

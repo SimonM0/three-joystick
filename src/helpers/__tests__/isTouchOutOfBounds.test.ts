@@ -56,15 +56,12 @@ describe('isTouchOutOfBounds', () => {
   )(
     'should %p',
     (_description, clientX, clientY, result) => {
-      const mockTouchEvent = {
-        clientX,
-        clientY,
-      } as Touch;
       const mockBaseAnchorPoint = new Vector2(0, 0);
       const mockPerimeterSize = 10;
 
       expect(isTouchOutOfBounds(
-        mockTouchEvent,
+        clientX,
+        clientY,
         mockBaseAnchorPoint,
         mockPerimeterSize,
       )).toEqual(result);

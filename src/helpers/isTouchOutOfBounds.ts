@@ -5,18 +5,15 @@ import { Vector2 } from 'three';
  * is defined by the param perimeterSize.
  *
  * Uses Pythagoras' Theorem to calculate the distance from the origin
- *
- * @param touchedPoint
- * @param origin
- * @param perimeterSize
  */
 const isTouchOutOfBounds = (
-  touchedPoint: Touch,
+  clientX: number,
+  clientY: number,
   origin: Vector2,
   perimeterSize: number,
 ): boolean => {
-  const xDelta = (touchedPoint.clientX - origin.x);
-  const yDelta = (touchedPoint.clientY - origin.y);
+  const xDelta = (clientX - origin.x);
+  const yDelta = (clientY - origin.y);
   const xSquared = Math.pow(xDelta, 2);
   const ySquared = Math.pow(yDelta, 2);
   const distanceFromTheOrigin = Math.sqrt(xSquared + ySquared);

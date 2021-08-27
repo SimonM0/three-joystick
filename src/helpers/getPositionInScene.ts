@@ -5,12 +5,13 @@ import { PerspectiveCamera, Vector3 } from 'three';
  * position in the 3d world
  */
 const getPositionInScene = (
-  touch: Touch,
+  clientX: number,
+  clientY: number,
   camera: PerspectiveCamera,
   scale = 10,
 ): Vector3 => {
-  const relativeX = (touch.clientX / window.innerWidth) * 2 - 1;
-  const relativeY = -(touch.clientY / window.innerHeight) * 2 + 1;
+  const relativeX = (clientX / window.innerWidth) * 2 - 1;
+  const relativeY = -(clientY / window.innerHeight) * 2 + 1;
 
   const inSceneTouchVector = new Vector3(relativeX, relativeY, 0)
     .unproject(camera)
