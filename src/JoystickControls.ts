@@ -88,9 +88,6 @@ class JoystickControls {
       return;
     }
 
-    /**
-     * TODO: Detect if moved more than, then
-     */
     this.onStart(event.clientX, event.clientY);
   };
 
