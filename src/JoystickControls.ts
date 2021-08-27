@@ -25,9 +25,6 @@ class JoystickControls {
    * This is used to detect if the user has moved outside the
    * joystick base. It will snap the joystick ball to the bounds
    * of the base of the joystick
-   *
-   * TODO: Needs fixing because the pixel change does not correlate to the
-   * TODO: canvas so it currently jumps
    */
   joystickTouchZone = 75;
   /**
@@ -141,7 +138,21 @@ class JoystickControls {
 
     this.touchPoint = new Vector2(clientX, clientY);
 
-    this.updateJoystickBallPosition(clientX, clientY);
+    const positionInScene = getPositionInScene(
+      clientX,
+      clientY,
+      this.camera,
+      this.joystickScale,
+    );
+
+    if (!this.isJoystickAttached) {
+      /**
+       * If there is no base or ball, then we need to attach the joystick
+       */
+      return this.attachJoystick(positionInScene);
+    }
+
+    this.updateJoystickBallPosition(clientX, clientY, positionInScene);
   };
 
   /**
@@ -250,21 +261,14 @@ class JoystickControls {
     return positionInScene;
   };
 
-  private updateJoystickBallPosition = (clientX: number, clientY: number) => {
-    const positionInScene = getPositionInScene(
-      clientX,
-      clientY,
-      this.camera,
-      this.joystickScale,
-    );
-
-    if (!this.isJoystickAttached) {
-      /**
-       * If there is no base or ball, then we need to attach the joystick
-       */
-      return this.attachJoystick(positionInScene);
-    }
-
+  /**
+   * Attaches the joystick or updates the joystick ball position
+   */
+  private updateJoystickBallPosition = (
+    clientX: number,
+    clientY: number,
+    positionInScene: Vector3,
+  ) => {
     const joyStickBall = this.scene.getObjectByName('joystick-ball');
     const joystickBallPosition = this.getJoystickBallPosition(
       clientX,
