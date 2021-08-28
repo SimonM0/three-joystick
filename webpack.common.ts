@@ -5,6 +5,7 @@ import ESLintPlugin from 'eslint-webpack-plugin';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
 
 const config: webpack.Configuration = {
   entry: {
@@ -62,6 +63,14 @@ const config: webpack.Configuration = {
     extensions: ['*', '.tsx', '.ts', '.js'],
   },
   plugins: [
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: 'examples/RotatingTargetExample/images',
+          to: 'examples/RotatingTargetExample/images',
+        },
+      ],
+    }),
     new ForkTsCheckerWebpackPlugin({
       async: false,
     }),

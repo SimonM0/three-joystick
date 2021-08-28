@@ -1,65 +1,84 @@
 import './styles.scss';
 import * as THREE from 'three';
-import RotationJoystickControls from '../../src/RotationJoystickControls';
+import { RotationJoystickControls } from '../../src';
 // import JoystickControls from '../../src';
 
-const createExample = () => {
-  const element = document.getElementById('target');
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera();
+declare global {
+  interface Window { example: RotatingTargetExample; }
+}
 
-  camera.position.z = 300;
-
-  const renderer = new THREE.WebGLRenderer({
+class RotatingTargetExample {
+  element = document.getElementById('target');
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera();
+  renderer = new THREE.WebGLRenderer({
     antialias: true,
   });
-
-  element?.appendChild(renderer.domElement);
-
-  const geometry = new THREE.SphereGeometry(50, 32, 16);
-  const material = new THREE.MeshPhongMaterial({
-    wireframe: true,
-    wireframeLinewidth: 1,
-    color: 0xFFAACC,
+  rotationJoystick: RotationJoystickControls;
+  earth: THREE.Mesh;
+  geometry = new THREE.SphereGeometry(0.5, 36, 36);
+  material = new THREE.MeshPhongMaterial({
+    bumpMap: new THREE.TextureLoader().load('images/earth_bump.jpg'),
+    bumpScale: 0.05,
+    map: new THREE.TextureLoader().load('images/earth_map.jpg'),
+    specularMap: new THREE.TextureLoader().load('images/earth_spec.jpg'),
+    specular: new THREE.Color('grey')
   });
-  const actor = new THREE.Mesh(geometry, material);
-  // const joystick = new JoystickControls(camera, scene);
-  const rotationJoystick = new RotationJoystickControls(camera, scene, actor);
+  ambientLight = new THREE.AmbientLight(0xFFFFFF);
+  light = new THREE.DirectionalLight(0xFFFFFF, 0.3);
 
-  const pointLight = new THREE.PointLight(0xFFFFFF);
-  pointLight.position.x = -100;
-  pointLight.position.y = 100;
-  pointLight.position.z = 400;
+  constructor() {
 
-  scene.add(camera);
-  scene.add(actor);
-  scene.add(pointLight);
+    this.earth = new THREE.Mesh(this.geometry, this.material);
+    this.rotationJoystick = new RotationJoystickControls(
+      this.camera,
+      this.scene,
+      this.earth,
+    );
+    this.setupScene();
+  }
 
-  const resize = () => {
-    const width = element?.clientWidth || 0;
-    const height = element?.clientHeight || 0;
+  setupScene = () => {
+    this.element?.appendChild(this.renderer.domElement);
 
-    renderer.setSize(width, height);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
+    this.camera.position.z = 5;
+
+    this.light.position.x = 60;
+    this.light.position.y = 60;
+    this.light.position.z = 10000;
+
+    this.scene.add(
+      this.camera,
+      this.earth,
+      this.light,
+      this.ambientLight,
+    );
+
+
+    this.resize();
+    this.animate();
   };
 
-  const animate = () => {
-    requestAnimationFrame(animate);
+  resize = () => {
+    const width = this.element?.clientWidth || 0;
+    const height = this.element?.clientHeight || 0;
 
-    // joystick.update((movement) => {
-    //   if (movement) {
-    //     console.log(movement);
-    //   }
-    // });
-
-    rotationJoystick.update();
-
-    renderer.render(scene, camera);
+    this.renderer.setSize(width, height);
+    this.camera.aspect = width / height;
+    this.camera.updateProjectionMatrix();
   };
 
-  resize();
-  animate();
-};
+  animate = () => {
+    requestAnimationFrame(this.animate);
 
-window.addEventListener('load', createExample);
+    this.earth.rotation.y  += 0.001;
+
+    this.rotationJoystick.update();
+
+    this.renderer.render(this.scene, this.camera);
+  };
+}
+
+window.addEventListener('load', () => {
+ window.example = new RotatingTargetExample();
+});

@@ -1,10 +1,11 @@
 module.exports = {
-  rootDir: './src',
+  rootDir: './',
   preset: 'ts-jest',
-  testEnvironment: 'node',
+  testEnvironment: 'jsdom',
   collectCoverage: true,
   collectCoverageFrom: [
-    '**/*.{js,jsx,ts,tsx}',
+    'src/**/*.{js,jsx,ts,tsx}',
+    'examples/**/*.{js,jsx,ts,tsx}',
     '!types/*.{js,jsx,ts,tsx}',
   ],
 };

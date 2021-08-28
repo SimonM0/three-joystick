@@ -185,9 +185,11 @@ class JoystickControls {
       color: color,
       opacity: 0.5,
       transparent: true,
+      depthTest: false,
     });
     const uiElement = new Mesh(geometry, material);
 
+    uiElement.renderOrder = 1;
     uiElement.name = name;
     uiElement.position.copy(position);
 

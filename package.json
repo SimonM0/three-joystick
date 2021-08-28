@@ -4,7 +4,7 @@
   "description": "A joystick for three.js",
   "main": "dist/index.js",
   "scripts": {
-    "test": "jest",
+    "test": "jest --coverage",
     "lint": "eslint ./src --ext .ts --fix",
     "dev": "webpack serve --config webpack.dev.ts",
     "build": "webpack --config webpack.prod.ts"
@@ -32,6 +32,7 @@
     "@babel/preset-typescript": "^7.12.7",
     "@babel/register": "^7.15.3",
     "@babel/runtime": "^7.12.5",
+    "@types/copy-webpack-plugin": "^8.0.1",
     "@types/jest": "^27.0.1",
     "@types/mini-css-extract-plugin": "^2.2.0",
     "@types/three": "^0.131.0",
@@ -40,6 +41,7 @@
     "@typescript-eslint/parser": "^4.11.1",
     "babel-loader": "^8.2.2",
     "clean-webpack-plugin": "^4.0.0-alpha.0",
+    "copy-webpack-plugin": "^9.0.1",
     "css-loader": "^6.2.0",
     "eslint": "^7.17.0",
     "eslint-config-prettier": "^8.3.0",
