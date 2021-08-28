@@ -1,6 +1,5 @@
-import RotationJoystickControls from '../RotationJoystickControls';
 import * as THREE from 'three';
-import { Quaternion } from 'three';
+import RotationJoystickControls from '../RotationJoystickControls';
 
 const mockSwipe = (clientX = 128, clientY = 128) => {
   const touchStart = new TouchEvent('touchstart', {});
@@ -110,7 +109,7 @@ describe('RotationJoystickControls', () => {
     controls.update();
 
     expect(controls.quaternion).toEqual(
-      new Quaternion(
+      new THREE.Quaternion(
         0,
         0.06395631828030929,
         0,

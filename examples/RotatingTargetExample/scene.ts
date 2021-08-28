@@ -28,7 +28,6 @@ class RotatingTargetExample {
   light = new THREE.DirectionalLight(0xFFFFFF, 0.3);
 
   constructor() {
-
     this.earth = new THREE.Mesh(this.geometry, this.material);
     this.rotationJoystick = new RotationJoystickControls(
       this.camera,

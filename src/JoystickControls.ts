@@ -1,13 +1,4 @@
-import {
-  MeshLambertMaterial,
-  CircleGeometry,
-  Mesh,
-  Scene,
-  Vector2,
-  Vector3,
-  PerspectiveCamera,
-  Object3D,
-} from 'three';
+import * as THREE from 'three';
 import isTouchOutOfBounds from './helpers/isTouchOutOfBounds';
 import degreesToRadians from './helpers/degreesToRadians';
 import getPositionInScene from './helpers/getPositionInScene';
@@ -16,11 +7,11 @@ class JoystickControls {
   /**
    * This is the three.js scene
    */
-  scene: Scene;
+  scene: THREE.Scene;
   /**
    * This is the three.js  camera
    */
-  camera: PerspectiveCamera;
+  camera: THREE.PerspectiveCamera;
   /**
    * This is used to detect if the user has moved outside the
    * joystick base. It will snap the joystick ball to the bounds
@@ -30,11 +21,11 @@ class JoystickControls {
   /**
    * Anchor of the joystick base
    */
-  baseAnchorPoint: Vector2 = new Vector2();
+  baseAnchorPoint: THREE.Vector2 = new THREE.Vector2();
   /**
    * Current point of the joystick ball
    */
-  touchPoint: Vector2 = new Vector2();
+  touchPoint: THREE.Vector2 = new THREE.Vector2();
   /**
    * Function that allows you to prevent the joystick
    * from attaching
@@ -54,12 +45,11 @@ class JoystickControls {
   joystickScale = 10;
 
   constructor(
-    camera: PerspectiveCamera,
-    scene: Scene,
+    camera: THREE.PerspectiveCamera,
+    scene: THREE.Scene,
   ) {
     this.camera = camera;
     this.scene = scene;
-
     this.create();
   }
 
@@ -73,7 +63,7 @@ class JoystickControls {
 
     const touch = event.touches.item(0);
 
-    if (touch === null) {
+    if (!touch) {
       return;
     }
 
@@ -95,7 +85,7 @@ class JoystickControls {
    * Plots the anchor point
    */
   private onStart = (clientX: number, clientY: number) => {
-    this.baseAnchorPoint = new Vector2(clientX, clientY);
+    this.baseAnchorPoint = new THREE.Vector2(clientX, clientY);
     this.interactionHasBegan = true;
   };
 
@@ -133,7 +123,7 @@ class JoystickControls {
       return;
     }
 
-    this.touchPoint = new Vector2(clientX, clientY);
+    this.touchPoint = new THREE.Vector2(clientX, clientY);
 
     const positionInScene = getPositionInScene(
       clientX,
@@ -153,13 +143,20 @@ class JoystickControls {
   };
 
   /**
-   * Clean up joystick when the user interaction has finished
+   * Handles the touchend and mouseup events
    */
-  private handleTouchEnd = () => {
+  private handleEventEnd = () => {
     if (!this.isJoystickAttached) {
       return;
     }
 
+    this.onEnd();
+  };
+
+  /**
+   * Clean up joystick when the user interaction has finished
+   */
+  private onEnd = () => {
     this.scene.getObjectByName('joystick-base')?.removeFromParent();
     this.scene.getObjectByName('joystick-ball')?.removeFromParent();
 
@@ -175,19 +172,19 @@ class JoystickControls {
    */
   private attachJoystickUI = (
     name: string,
-    position: Vector3,
+    position: THREE.Vector3,
     color: number,
     size: number,
   ) => {
     const zoomScale = 1 / this.camera.zoom;
-    const geometry = new CircleGeometry(size * zoomScale, 72);
-    const material = new MeshLambertMaterial({
+    const geometry = new THREE.CircleGeometry(size * zoomScale, 72);
+    const material = new THREE.MeshLambertMaterial({
       color: color,
       opacity: 0.5,
       transparent: true,
       depthTest: false,
     });
-    const uiElement = new Mesh(geometry, material);
+    const uiElement = new THREE.Mesh(geometry, material);
 
     uiElement.renderOrder = 1;
     uiElement.name = name;
@@ -199,7 +196,7 @@ class JoystickControls {
   /**
    * Creates the ball and base of the joystick
    */
-  private attachJoystick = (positionInScene: Vector3) => {
+  private attachJoystick = (positionInScene: THREE.Vector3) => {
     this.attachJoystickUI(
       'joystick-base',
       positionInScene,
@@ -224,8 +221,8 @@ class JoystickControls {
   private getJoystickBallPosition = (
     clientX: number,
     clientY: number,
-    positionInScene: Vector3,
-  ): Vector3 => {
+    positionInScene: THREE.Vector3,
+  ): THREE.Vector3 => {
     const touchWasOutsideJoystick = isTouchOutOfBounds(
       clientX,
       clientY,
@@ -243,14 +240,15 @@ class JoystickControls {
       ) - degreesToRadians(90);
       const xDistance = Math.sin(angle) * this.joystickTouchZone;
       const yDistance = Math.cos(angle) * this.joystickTouchZone;
-      const direction = new Vector3(-xDistance, -yDistance, 0).normalize();
+      const direction = new THREE.Vector3(-xDistance, -yDistance, 0)
+        .normalize();
       const joyStickBase = this.scene.getObjectByName('joystick-base');
 
       /**
        * positionInScene restricted to the perimeter of the joystick
        * base
        */
-      return (joyStickBase as Object3D).position.clone().add(direction);
+      return (joyStickBase as THREE.Object3D).position.clone().add(direction);
     }
 
     /**
@@ -266,7 +264,7 @@ class JoystickControls {
   private updateJoystickBallPosition = (
     clientX: number,
     clientY: number,
-    positionInScene: Vector3,
+    positionInScene: THREE.Vector3,
   ) => {
     const joyStickBall = this.scene.getObjectByName('joystick-ball');
     const joystickBallPosition = this.getJoystickBallPosition(
@@ -302,10 +300,10 @@ class JoystickControls {
   public create = (): void => {
     window.addEventListener('touchstart', this.handleTouchStart);
     window.addEventListener('touchmove', this.handleTouchMove);
-    window.addEventListener('touchend', this.handleTouchEnd);
+    window.addEventListener('touchend', this.handleEventEnd);
     window.addEventListener('mousedown', this.handleMouseDown);
     window.addEventListener('mousemove', this.handleMouseMove);
-    window.addEventListener('mouseup', this.handleTouchEnd);
+    window.addEventListener('mouseup', this.handleEventEnd);
   };
 
   /**
@@ -314,10 +312,10 @@ class JoystickControls {
   public destroy = (): void => {
     window.removeEventListener('touchstart', this.handleTouchStart);
     window.removeEventListener('touchmove', this.handleTouchMove);
-    window.removeEventListener('touchend', this.handleTouchEnd);
+    window.removeEventListener('touchend', this.handleEventEnd);
     window.removeEventListener('mousedown', this.handleMouseDown);
     window.removeEventListener('mousemove', this.handleMouseMove);
-    window.removeEventListener('mouseup', this.handleTouchEnd);
+    window.removeEventListener('mouseup', this.handleEventEnd);
   };
 
   /**
