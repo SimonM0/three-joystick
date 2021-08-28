@@ -5,7 +5,6 @@ module.exports = {
   collectCoverage: true,
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',
-    'examples/**/*.{js,jsx,ts,tsx}',
     '!types/*.{js,jsx,ts,tsx}',
   ],
 };
