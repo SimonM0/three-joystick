@@ -1,8 +1,5 @@
 import * as THREE from 'three';
 import JoystickControls from '../JoystickControls';
-import { Object3D } from 'three';
-
-// import getPositionInScene from '../helpers/getPositionInScene';
 
 enum TOUCH {
   START = 'touchstart',
@@ -613,6 +610,400 @@ describe('JoystickControls', () => {
       sceneUIObject.parent.uuid = 'stripped-for-snapshot-test';
 
       expect(sceneUIObject).toMatchSnapshot();
+    });
+  });
+
+  describe('attachJoystick', () => {
+    it('should attach `joystick-base` to the scene', () => {
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera();
+
+      new JoystickControls(
+        camera,
+        scene,
+      );
+
+      fireTouchEvent(
+        TOUCH.START,
+        {
+          clientX: 0,
+          clientY: 0,
+        },
+      );
+
+      fireTouchEvent(
+        TOUCH.MOVE,
+        {
+          clientX: 0,
+          clientY: 128,
+        },
+      );
+
+      expect(scene.getObjectByName('joystick-base')?.name)
+        .toEqual('joystick-base');
+    });
+
+    it('should attach joystick-ball to the scene', () => {
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera();
+
+      new JoystickControls(
+        camera,
+        scene,
+      );
+
+      fireTouchEvent(
+        TOUCH.START,
+        {
+          clientX: 0,
+          clientY: 0,
+        },
+      );
+
+      fireTouchEvent(
+        TOUCH.MOVE,
+        {
+          clientX: 0,
+          clientY: 128,
+        },
+      );
+
+      expect(scene.getObjectByName('joystick-ball')?.name)
+        .toEqual('joystick-ball');
+    });
+
+    it('should set isJoystickAttached to true', () => {
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera();
+      const controls = new JoystickControls(
+        camera,
+        scene,
+      );
+
+      expect(controls.isJoystickAttached).toEqual(false);
+
+      fireTouchEvent(
+        TOUCH.START,
+        {
+          clientX: 0,
+          clientY: 0,
+        },
+      );
+
+      fireTouchEvent(
+        TOUCH.MOVE,
+        {
+          clientX: 0,
+          clientY: 128,
+        },
+      );
+
+      expect(controls.isJoystickAttached).toEqual(true);
+    });
+  });
+
+  describe('getJoystickBallPosition', () => {
+    it('should return the positionInScene if the touch was in side the joystick base', () => {
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera();
+      const controls = new JoystickControls(
+        camera,
+        scene,
+      );
+
+      fireTouchEvent(
+        TOUCH.START,
+        {
+          clientX: 0,
+          clientY: 0,
+        },
+      );
+
+      expect(
+        // @ts-ignore
+        controls.getJoystickBallPosition(
+          0,
+          0,
+          new THREE.Vector3(10, 10, 0),
+        ),
+      ).toEqual(new THREE.Vector3(10, 10, 0));
+    });
+  });
+
+  it('should return the positionInScene if the touch was in side the joystick base', () => {
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera();
+    const controls = new JoystickControls(
+      camera,
+      scene,
+    );
+
+    fireTouchEvent(
+      TOUCH.START,
+      {
+        clientX: 0,
+        clientY: 0,
+      },
+    );
+
+    fireTouchEvent(
+      TOUCH.MOVE,
+      {
+        clientX: 1000,
+        clientY: 1000,
+      },
+    );
+
+    expect(
+      // @ts-ignore
+      controls.getJoystickBallPosition(
+        1000,
+        1000,
+        new THREE.Vector3(1, 1, 0),
+      ),
+    ).toEqual(new THREE.Vector3(100.70710678118655, 99.29289321881345, 0));
+  });
+
+  describe('updateJoystickBallPosition', () => {
+    it('should update the joystickBall position', () => {
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera();
+      const controls = new JoystickControls(
+        camera,
+        scene,
+      );
+
+      fireTouchEvent(
+        TOUCH.START,
+        {
+          clientX: 0,
+          clientY: 0,
+        },
+      );
+
+      fireTouchEvent(
+        TOUCH.MOVE,
+        {
+          clientX: 1000,
+          clientY: 1000,
+        },
+      );
+
+      // @ts-ignore
+      controls.updateJoystickBallPosition(
+        1,
+        1,
+        new THREE.Vector3(1, 1, 0),
+      );
+
+      expect(scene.getObjectByName('joystick-ball')?.position)
+        .toEqual(new THREE.Vector3(1, 1, 0));
+    });
+
+    it('should not update the joystickBall position if the joyStickBall does not exist', () => {
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera();
+      const controls = new JoystickControls(
+        camera,
+        scene,
+      );
+
+      fireTouchEvent(
+        TOUCH.START,
+        {
+          clientX: 0,
+          clientY: 0,
+        },
+      );
+
+      fireTouchEvent(
+        TOUCH.MOVE,
+        {
+          clientX: 1000,
+          clientY: 1000,
+        },
+      );
+
+      scene.getObjectByName('joystick-ball')?.removeFromParent();
+
+      // @ts-ignore
+      controls.updateJoystickBallPosition(
+        1,
+        1,
+        new THREE.Vector3(1, 1, 0),
+      );
+
+      expect(scene.getObjectByName('joystick-ball')?.position)
+        .toBeUndefined();
+    });
+  });
+
+  describe('getJoystickMovement', () => {
+    it('should return the distanced moved', function () {
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera();
+      const controls = new JoystickControls(
+        camera,
+        scene,
+      );
+
+      fireTouchEvent(
+        TOUCH.START,
+        {
+          clientX: 188,
+          clientY: 188,
+        },
+      );
+
+      fireTouchEvent(
+        TOUCH.MOVE,
+        {
+          clientX: 1000,
+          clientY: 1000,
+        },
+      );
+
+      // @ts-ignore
+      expect(controls.getJoystickMovement()).toEqual({
+        moveX: 812,
+        moveY: 812,
+      });
+    });
+  });
+
+  describe('destroy', () => {
+    it('should remove all event listeners', function () {
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera();
+      const controls = new JoystickControls(
+        camera,
+        scene,
+      );
+      const spyRemoveEventListener = jest.spyOn(window, 'removeEventListener');
+
+      controls.destroy();
+
+      expect(spyRemoveEventListener.mock.calls).toEqual([
+        [
+          // @ts-ignore
+          'touchstart', controls.handleTouchStart,
+        ], [
+          // @ts-ignore
+          'touchmove', controls.handleTouchMove,
+        ], [
+          // @ts-ignore
+          'touchend', controls.handleEventEnd,
+        ], [
+          // @ts-ignore
+          'mousedown', controls.handleMouseDown,
+        ], [
+          // @ts-ignore
+          'mousemove', controls.handleMouseMove,
+        ], [
+          // @ts-ignore
+          'mouseup', controls.handleEventEnd,
+        ],
+      ]);
+    });
+  });
+
+  describe('create', () => {
+    it('should add all event listeners', function () {
+      const spyAddEventListener = jest.spyOn(window, 'addEventListener');
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera();
+      const controls = new JoystickControls(
+        camera,
+        scene,
+      );
+
+      expect(spyAddEventListener.mock.calls).toEqual([
+        [
+          // @ts-ignore
+          'touchstart', controls.handleTouchStart,
+        ], [
+          // @ts-ignore
+          'touchmove', controls.handleTouchMove,
+        ], [
+          // @ts-ignore
+          'touchend', controls.handleEventEnd,
+        ], [
+          // @ts-ignore
+          'mousedown', controls.handleMouseDown,
+        ], [
+          // @ts-ignore
+          'mousemove', controls.handleMouseMove,
+        ], [
+          // @ts-ignore
+          'mouseup', controls.handleEventEnd,
+        ],
+      ]);
+    });
+  });
+
+  describe('update', () => {
+    it('should invoke the callback with the movement info', function () {
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera();
+      const controls = new JoystickControls(
+        camera,
+        scene,
+      );
+      const mockCallBack = jest.fn();
+
+      fireTouchEvent(
+        TOUCH.START,
+        {
+          clientX: 188,
+          clientY: 188,
+        },
+      );
+
+      fireTouchEvent(
+        TOUCH.MOVE,
+        {
+          clientX: 1000,
+          clientY: 1000,
+        },
+      );
+
+      controls.update(mockCallBack);
+
+      expect(mockCallBack).toHaveBeenCalledWith({
+        moveX: 812,
+        moveY: 812,
+      });
+    });
+
+    it('should not throw error if there is no callback', function () {
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera();
+      const controls = new JoystickControls(
+        camera,
+        scene,
+      );
+
+      fireTouchEvent(
+        TOUCH.START,
+        {
+          clientX: 188,
+          clientY: 188,
+        },
+      );
+
+      fireTouchEvent(
+        TOUCH.MOVE,
+        {
+          clientX: 1000,
+          clientY: 1000,
+        },
+      );
+
+
+
+      expect(() => {
+        controls.update();
+      }).not.toThrowError();
     });
   });
 });
