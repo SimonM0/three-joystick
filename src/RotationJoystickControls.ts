@@ -83,11 +83,11 @@ class RotationJoystickControls extends JoystickControls {
 
     if (joystickMovement) {
       this.rotateVerticalMovement(
-        joystickMovement.moveX * this.deltaScale,
+        joystickMovement.moveY * this.deltaScale,
       );
 
       this.rotateHorizontalMovement(
-        joystickMovement.moveY * this.deltaScale,
+        joystickMovement.moveX * this.deltaScale,
       );
     }
   };

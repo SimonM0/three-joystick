@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import RotationJoystickControls from '../RotationJoystickControls';
 
-const mockSwipe = (clientX = 128, clientY = 128) => {
+const mockSwipe = (clientX = 88, clientY = 128) => {
   const touchStart = new TouchEvent('touchstart', {});
   touchStart.touches.item = () => ({
     clientX: 0,
@@ -77,7 +77,7 @@ describe('RotationJoystickControls', () => {
 
     controls.update();
 
-    expect(spyOnRotateHorizontalMovement).toHaveBeenCalledWith(0.128);
+    expect(spyOnRotateHorizontalMovement).toHaveBeenCalledWith(0.088);
   });
 
   it('should not rotate the horizontal movement axis', () => {
@@ -111,9 +111,9 @@ describe('RotationJoystickControls', () => {
     expect(controls.quaternion).toEqual(
       new THREE.Quaternion(
         0,
-        0.06395631828030929,
+        0.043985804040905185,
         0,
-        0.99795269895523,
+        0.9990321561605888,
       ),
     );
   });

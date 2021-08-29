@@ -10,6 +10,7 @@ import CopyWebpackPlugin from 'copy-webpack-plugin';
 const config: webpack.Configuration = {
   entry: {
     'examples/RotatingTargetExample/scene': './examples/RotatingTargetExample/scene.ts',
+    'examples/BasicExample/scene': './examples/BasicExample/scene.ts',
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
@@ -85,6 +86,11 @@ const config: webpack.Configuration = {
       filename: 'examples/RotatingTargetExample/index.html',
       template: 'examples/RotatingTargetExample/index.html',
       chunks: ['examples/RotatingTargetExample/scene'],
+    }),
+    new HtmlWebpackPlugin({
+      filename: 'examples/BasicExample/index.html',
+      template: 'examples/BasicExample/index.html',
+      chunks: ['examples/BasicExample/scene'],
     }),
   ],
 };

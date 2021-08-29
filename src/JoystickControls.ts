@@ -42,7 +42,7 @@ class JoystickControls {
   /**
    * Setting joystickScale will scale the joystick up or down in size
    */
-  joystickScale = 10;
+  joystickScale = 20;
 
   constructor(
     camera: THREE.PerspectiveCamera,
@@ -289,8 +289,8 @@ class JoystickControls {
     }
 
     return {
-      moveX: this.touchPoint.y - this.baseAnchorPoint.y,
-      moveY: this.touchPoint.x - this.baseAnchorPoint.x,
+      moveX: this.touchPoint.x - this.baseAnchorPoint.x,
+      moveY: this.touchPoint.y - this.baseAnchorPoint.y,
     };
   };
 

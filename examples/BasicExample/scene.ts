@@ -1,38 +1,32 @@
 import './styles.scss';
 import * as THREE from 'three';
-import { RotationJoystickControls } from '../../src';
-// import JoystickControls from '../../src';
+import { JoystickControls } from '../../src';
 
 declare global {
-  interface Window { rotatingExample: RotatingTargetExample; }
+  interface Window { basicExample: BasicExample; }
 }
 
-class RotatingTargetExample {
+class BasicExample {
   element = document.getElementById('target');
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera();
   renderer = new THREE.WebGLRenderer({
     antialias: true,
   });
-  rotationJoystick: RotationJoystickControls;
-  earth: THREE.Mesh;
+  joystickControls: JoystickControls;
+  target: THREE.Mesh;
   geometry = new THREE.SphereGeometry(1, 36, 36);
   material = new THREE.MeshPhongMaterial({
-    bumpMap: new THREE.TextureLoader().load('images/earth_bump.jpg'),
-    bumpScale: 0.05,
-    map: new THREE.TextureLoader().load('images/earth_map.jpg'),
-    specularMap: new THREE.TextureLoader().load('images/earth_spec.jpg'),
-    specular: new THREE.Color('grey')
+    wireframe: true,
+    color: 0xFFFFFF,
   });
-  ambientLight = new THREE.AmbientLight(0xFFFFFF);
-  light = new THREE.DirectionalLight(0xFFFFFF, 0.3);
+  light = new THREE.AmbientLight(0xFFFFFF);
 
   constructor() {
-    this.earth = new THREE.Mesh(this.geometry, this.material);
-    this.rotationJoystick = new RotationJoystickControls(
+    this.target = new THREE.Mesh(this.geometry, this.material);
+    this.joystickControls = new JoystickControls(
       this.camera,
       this.scene,
-      this.earth,
     );
     this.setupScene();
   }
@@ -42,17 +36,11 @@ class RotatingTargetExample {
 
     this.camera.position.z = 5;
 
-    this.light.position.x = 60;
-    this.light.position.y = 60;
-    this.light.position.z = 10000;
-
     this.scene.add(
       this.camera,
-      this.earth,
+      this.target,
       this.light,
-      this.ambientLight,
     );
-
 
     this.resize();
     this.animate();
@@ -72,14 +60,18 @@ class RotatingTargetExample {
   animate = () => {
     requestAnimationFrame(this.animate);
 
-    this.earth.rotation.y  += 0.001;
-
-    this.rotationJoystick.update();
+    this.joystickControls.update((movement) => {
+      if (movement) {
+        const sensitivity = 0.0001;
+        this.target.position.x += movement.moveX * sensitivity;
+        this.target.position.y += movement.moveY * sensitivity;
+      }
+    });
 
     this.renderer.render(this.scene, this.camera);
   };
 }
 
 window.addEventListener('load', () => {
- window.rotatingExample = new RotatingTargetExample();
+ window.basicExample = new BasicExample();
 });

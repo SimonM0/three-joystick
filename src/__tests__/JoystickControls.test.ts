@@ -850,7 +850,7 @@ describe('JoystickControls', () => {
       fireTouchEvent(
         TOUCH.START,
         {
-          clientX: 188,
+          clientX: 88,
           clientY: 188,
         },
       );
@@ -865,7 +865,7 @@ describe('JoystickControls', () => {
 
       // @ts-ignore
       expect(controls.getJoystickMovement()).toEqual({
-        moveX: 812,
+        moveX: 912,
         moveY: 812,
       });
     });
