@@ -1,4 +1,4 @@
-import JoystickControls from './JoystickControls';
+import { JoystickControls } from './JoystickControls';
 import { PerspectiveCamera, Object3D, Quaternion, Scene, Vector3 } from 'three';
 
 /**
@@ -92,5 +92,3 @@ export class RotationJoystickControls extends JoystickControls {
     }
   };
 }
-
-export default RotationJoystickControls;

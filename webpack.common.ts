@@ -13,7 +13,7 @@ const config: webpack.Configuration = {
     filename: '[name].js',
     library: {
       name: 'threeJoystick',
-      type: 'var',
+      type: 'umd',
     },
     publicPath: '/',
   },

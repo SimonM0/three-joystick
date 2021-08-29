@@ -5,5 +5,3 @@ export {
   JoystickControls,
   RotationJoystickControls,
 };
-
-export default JoystickControls;

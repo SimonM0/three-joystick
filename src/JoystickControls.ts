@@ -336,5 +336,3 @@ export class JoystickControls {
     callback?.(movement);
   };
 }
-
-export default JoystickControls;
