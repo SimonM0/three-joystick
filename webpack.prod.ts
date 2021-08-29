@@ -5,6 +5,6 @@ export default merge(
   common,
   {
     mode: 'production',
-    devtool: 'eval',
+    devtool: 'source-map',
   },
 );

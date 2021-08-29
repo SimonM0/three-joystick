@@ -1,11 +1,11 @@
 import JoystickControls from './JoystickControls';
-import { Object3D, PerspectiveCamera, Quaternion, Scene, Vector3 } from 'three';
+import { PerspectiveCamera, Object3D, Quaternion, Scene, Vector3 } from 'three';
 
 /**
  * A joystick controller that can be used to rotate a target mesh
  * in a scene
  */
-class RotationJoystickControls extends JoystickControls {
+export class RotationJoystickControls extends JoystickControls {
   /**
    * Target object to control
    */

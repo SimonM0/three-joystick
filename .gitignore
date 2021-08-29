@@ -8,7 +8,7 @@ node_modules
 coverage
 
 # production
-build
+dist
 
 # logs
 *.log

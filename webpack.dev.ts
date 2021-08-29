@@ -1,3 +1,4 @@
+// @ts-ignore
 import path from 'path';
 import { merge } from 'webpack-merge';
 import common from './webpack.common';

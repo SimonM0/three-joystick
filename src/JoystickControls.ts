@@ -3,7 +3,7 @@ import isTouchOutOfBounds from './helpers/isTouchOutOfBounds';
 import degreesToRadians from './helpers/degreesToRadians';
 import getPositionInScene from './helpers/getPositionInScene';
 
-class JoystickControls {
+export class JoystickControls {
   /**
    * This is the three.js scene
    */
@@ -157,8 +157,16 @@ class JoystickControls {
    * Clean up joystick when the user interaction has finished
    */
   private onEnd = () => {
-    this.scene.getObjectByName('joystick-base')?.removeFromParent();
-    this.scene.getObjectByName('joystick-ball')?.removeFromParent();
+    const joystickBase = this.scene.getObjectByName('joystick-base');
+    const joyStickBall = this.scene.getObjectByName('joystick-ball');
+
+    if (joystickBase){
+        this.scene.remove(joystickBase);
+    }
+
+    if ( joyStickBall) {
+      this.scene.remove(joyStickBall);
+    }
 
     this.isJoystickAttached = false;
     this.interactionHasBegan = false;
