@@ -10,18 +10,18 @@ This class will add a joystick that invokes a callback function with the delta x
 [See example code here](https://github.com/Fried-Chicken/three-joystick/blob/master/examples/BasicExample/scene.ts)
 
 1.  Import the JoystickControls class
-    ```
+    ```javascript
     import { JoystickControls } from 'three-joystick';
     ```
 2.  Pass through your camera and scene
-    ```
+    ```javascript
     const joystickControls = new JoystickControls(
       camera,
       scene,
     );
     ```
 3.  Invoke update in your animate loop
-    ```
+    ```javascript
     function animate() {
       requestAnimationFrame(animate);
 
@@ -59,11 +59,11 @@ This class will add a joystick that can rotate a target object.
 [See example code here](https://github.com/Fried-Chicken/three-joystick/blob/master/examples/RotatingTargetExample/scene.ts)
 
 1.  Import the RotationJoystickControls class
-    ```
+    ```javascript
     import { RotationJoystickControls } from 'three-joystick';
     ```
 2.  Pass through your camera, scene and the target mesh you want to control
-    ```
+    ```javascript
     const joystickControls = new RotationJoystickControls(
       camera,
       scene,
@@ -71,7 +71,7 @@ This class will add a joystick that can rotate a target object.
     );
     ```
 3.  Invoke update in your animate loop
-    ```
+    ```javascript
     function animate() {
       requestAnimationFrame(animate);
 
