@@ -4,6 +4,39 @@ An open source joystick that can be used to control a target in a three.js scene
 # Installation
 `npm i three-joystick`
 
+# RotationJoystickControls Usage
+This class will add a joystick that can rotate a target object.  
+[See demo here](https://fried-chicken.github.io/three-joystick/examples/RotatingTargetExample/index.html)  
+[See example code here](https://github.com/Fried-Chicken/three-joystick/blob/master/examples/RotatingTargetExample/scene.ts)
+
+1.  Import the RotationJoystickControls class
+    ```javascript
+    import { RotationJoystickControls } from 'three-joystick';
+    ```
+2.  Pass through your camera, scene and the target mesh you want to control
+    ```javascript
+    const joystickControls = new RotationJoystickControls(
+      camera,
+      scene,
+      target,
+    );
+    ```
+3.  Invoke update in your animate loop
+    ```javascript
+    function animate() {
+      requestAnimationFrame(animate);
+
+      /**
+       * Updates the rotation of the target mesh
+       */
+      rotationJoystick.update();
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+    ```
+
 # JoystickControls Usage
 This class will add a joystick that invokes a callback function with the delta x and delta y from the movement of the user.  
 [See demo here](https://fried-chicken.github.io/three-joystick/examples/BasicExample/index.html)  
@@ -51,37 +84,4 @@ This class will add a joystick that invokes a callback function with the delta x
 
     animate();
     ```
-
-
-# RotationJoystickControls Usage
-This class will add a joystick that can rotate a target object.  
-[See demo here](https://fried-chicken.github.io/three-joystick/examples/RotatingTargetExample/index.html)  
-[See example code here](https://github.com/Fried-Chicken/three-joystick/blob/master/examples/RotatingTargetExample/scene.ts)
-
-1.  Import the RotationJoystickControls class
-    ```javascript
-    import { RotationJoystickControls } from 'three-joystick';
-    ```
-2.  Pass through your camera, scene and the target mesh you want to control
-    ```javascript
-    const joystickControls = new RotationJoystickControls(
-      camera,
-      scene,
-      target,
-    );
-    ```
-3.  Invoke update in your animate loop
-    ```javascript
-    function animate() {
-      requestAnimationFrame(animate);
-
-      /**
-       * Updates the rotation of the target mesh
-       */
-      rotationJoystick.update();
-
-      renderer.render(scene, camera);
-    }
-
-    animate();
-    ```
+    
