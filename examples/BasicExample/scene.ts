@@ -64,7 +64,7 @@ class BasicExample {
       if (movement) {
         const sensitivity = 0.001;
         this.target.position.x += movement.moveX * sensitivity;
-        this.target.position.y += movement.moveY * sensitivity;
+        this.target.position.y -= movement.moveY * sensitivity;
       }
     });
 
