@@ -15,10 +15,9 @@
     "test": "jest --coverage",
     "lint": "eslint ./src --ext .ts --fix",
     "dev": "webpack serve --config webpack.dev.ts",
-    "build:lib": "webpack --config webpack.prod.ts",
-    "build:examples": "webpack --config webpack.examples.ts",
+    "build": "webpack --config webpack.prod.ts",
     "tsc": "tsc --project tsconfig.json --declaration --emitDeclarationOnly",
-    "prepare": "npm run build:lib && npm run tsc"
+    "prepare": "npm run build && npm run tsc"
   },
   "repository": {
     "type": "git",
@@ -47,7 +46,7 @@
     "@types/jest": "^27.0.1",
     "@types/mini-css-extract-plugin": "^2.2.0",
     "@types/three": "^0.131.0",
-    "@types/webpack-dev-server": "^4.0.0",
+    "@types/webpack-dev-server": "^4.1.0",
     "@typescript-eslint/eslint-plugin": "^4.29.3",
     "@typescript-eslint/parser": "^4.11.1",
     "babel-loader": "^8.2.2",
@@ -76,6 +75,6 @@
     "webpack-merge": "^5.8.0"
   },
   "peerDependencies": {
-    "three": "^0.131.3"
+    "three": "^0.104.0"
   }
 }

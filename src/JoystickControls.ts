@@ -42,7 +42,7 @@ export class JoystickControls {
   /**
    * Setting joystickScale will scale the joystick up or down in size
    */
-  joystickScale = 20;
+  joystickScale = 15;
 
   constructor(
     camera: THREE.PerspectiveCamera,
